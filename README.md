@@ -2,7 +2,8 @@
 Esther Shock Tube Operation Manuals
 
 ## EPICS Control system 
-    [Esther Epics repository](
+    [Esther Epics repository](https://github.com/ipfn-hpl/esther-epics)
+
 # Esther Subsystems
 ## Esther Vacuum System
 
@@ -11,16 +12,18 @@ Esther Shock Tube Operation Manuals
 ### Data Acquisition
 
 #### Red Pitaya
-    1. *Harware* [Red Pitaya](https://redpitaya.com/stemlab-125-14) Board
+    1. *Hardware* [Red Pitaya](https://redpitaya.com/stemlab-125-14/) Board
     2. Software
         * Red Pitaya GNU/Linux Ecosystem
         * Version: 1.04-93661995d [Stable Images](https://downloads.redpitaya.com/downloads/STEMlab-125-1x)
     3. Connected to HPL network (10.zzz.yyy.xxx)
         * After power-up should have Blue and Green LEDs steady, red blinking.
     4. Connect with:
+
     ```bash
     ssh root@rp-f01735.local
     ``` 
+
     5. Start Streaming server, take note of IP address, and start server:
  ```bash
     ping rp-f01735.local
