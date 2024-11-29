@@ -21,7 +21,7 @@ sudo systemctl start epics-css-archive.service
 1. Start GUI APP: 
 ```bash
 /opt/epics/phoebus.sh
-# Else, if you change preference setting file, run:
+# Else, if you changed preference settings file, run:
 /opt/epics/phoebus.sh -settings ~/.phoebus/settings.ini
 ``` 
 2. Open *VacuumDisplay* OPI
