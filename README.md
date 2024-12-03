@@ -57,7 +57,7 @@ ssh root@rp-f01735.local
 ip address
 streaming-server.local.sh streaming_config_local_ch1_16b_16d_16MS
 # if needed:
-# mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
+mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
 ``` 
 6. Check Server sertting on client PC and run acquisition:
     * Download Client tools [here](https://downloads.redpitaya.com/downloads/Clients/streaming).
