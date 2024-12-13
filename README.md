@@ -99,11 +99,11 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 ``` 
 
 
-## Automated Pulse Trigger and Acquisition
+## Automated Pulse Trigger and  Data Acquisition Sequence.
 
 1. Start Red pitaya server as described in previous step.  Note IP address.
 2. Login to golem PC
-3. Check Options:
+3. Check Program Options:
  ```bash
  cd ~/git-repos/esther-python/pulse-schedule
 ./pulse-start.py -h  
