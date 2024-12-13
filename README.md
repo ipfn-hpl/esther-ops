@@ -127,7 +127,7 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 8. Transfer Red Pitaya files and convert to csv, if necessary.
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
-scp root@rp-f01735:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data_files/
+scp root@rp-f01735.local:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data_files/
 convert_tool data_files/data_file_2024-xxxxx.bin
 ``` 
 9. Plot Red Pitaya Plots
