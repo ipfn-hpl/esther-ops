@@ -94,6 +94,9 @@ else:
 print(f"Data len: {len(signal)}")
 dirname, basename = os.path.split(args.file)
 p1 = win.addPlot(title=f"RP plot {basename:s}")
+p1.setDownsampling(1000, auto=False)  # , method='subsample')
+#                   method ({'subsample', 'mean', 'peak'}, 
+
 data2Plot = signal[:args.maxrows]
 # data2Plot = signal[:args.maxrows:args.decim]
 x = np.arange(0, len(data2Plot), dtype='int') / 125e6 * RP_DECIM
@@ -104,7 +107,7 @@ p1.setLabel('bottom', "Time", units='s')
 # updatePlot()
 # create an exporter instance, as an argument give it
 # the item you wish to export
-#exporter = pg.exporters.ImageExporter(plt.plotItem)
+# exporter = pg.exporters.ImageExporter(plt.plotItem)
 exporter = pg.exporters.ImageExporter(win.scene())
 # save to file
 exporter.export(f'{basename}.png')
