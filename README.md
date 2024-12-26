@@ -109,8 +109,8 @@ rpsa_client --remote --hosts=10.zzz.yyy.x --mode start --verbose
 9. Transfer binary files, logs, etc. and convert to .csv format:
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
-scp root@rp-f01735:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data_files/
-convert_tool data_files/data_file_2024-xxxxx.bin
+scp root@rp-f01735:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data-files/
+convert_tool data-files/data_file_2024-xxxxx.bin
 ``` 
 
 
@@ -142,12 +142,12 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 8. Transfer Red Pitaya files and convert to csv, if necessary.
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
-scp root@rp-f01735.local:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data_files/
-convert_tool data_files/data_file_2024-xxxxx.bin
+scp root@rp-f01735.local:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data-files/
+convert_tool data-files/data_file_2024-xxxxx.bin
 ``` 
 9. Plot Red Pitaya Plots
  ```bash
-./plotRPbin.py -m 10000000 -f data_files/data_file_2024-xxxxx  # (no extension)
+./plotRPbin.py -m 10000000 -f data-files/data_file_2024-xxxxx  # (no extension)
 ``` 
 
 ## Streak Camera Trigger System
