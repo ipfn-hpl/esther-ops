@@ -87,7 +87,7 @@ mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
 6. List binary files and clean tmp directory, if necessary:
 
 :warning:
-Make sure you have downloaded the important ones!!!
+Make sure you have downloaded the important files!!!
  ```bash
  ll_stream
  clean_stream
@@ -100,7 +100,7 @@ rpsa_client --detect
 rpsa_client --config --hosts=10.zzz.yyy.x --get=VV
 ``` 
 
-(Skip next steps if are using *Automated Pulse Sequence*, next section)
+:bulb: (Skip next steps if are using *Automated Pulse Sequence*, next section)
 
 8. Run manual acquisition:
  ```bash
