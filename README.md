@@ -84,7 +84,16 @@ ip address
 streaming-server.local.sh streaming_config_local_ch1_16b_16d_16MS
 mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
 ``` 
-6. Check Server serttings on client PC:
+6. List binary files and clean tmp directory, if necessary:
+
+:warning:
+Make sure you have downloaded the important ones!!!
+ ```bash
+ ll_stream
+ clean_stream
+``` 
+
+7. Check Server settings on client PC:
     * Download Client tools [here](https://downloads.redpitaya.com/downloads/Clients/streaming).
  ```bash
 rpsa_client --detect
@@ -93,11 +102,11 @@ rpsa_client --config --hosts=10.zzz.yyy.x --get=VV
 
 (Skip next steps if are using *Automated Pulse Sequence*, next section)
 
-7. Run manual acquisition:
+8. Run manual acquisition:
  ```bash
 rpsa_client --remote --hosts=10.zzz.yyy.x --mode start --verbose
 ``` 
-8. Transfer binary files, logs, etc. and convert to .csv format:
+9. Transfer binary files, logs, etc. and convert to .csv format:
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
 scp root@rp-f01735:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data_files/
