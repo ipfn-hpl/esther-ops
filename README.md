@@ -81,17 +81,22 @@ ping rp-f01735.local
 ssh root@rp-f01735.local
 ip address
 # if needed:
-mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
 streaming-server.local.sh streaming_config_local_ch1_16b_16d_16MS
+mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
 ``` 
-6. Check Server sertting on client PC and run manual acquisition:
+6. Check Server serttings on client PC:
     * Download Client tools [here](https://downloads.redpitaya.com/downloads/Clients/streaming).
  ```bash
 rpsa_client --detect
 rpsa_client --config --hosts=10.zzz.yyy.x --get=VV
+``` 
+
+(Skip next steps if are using *Automated Pulse Sequence*, next sections)
+7. Run manual acquisition:
+ ```bash
 rpsa_client --remote --hosts=10.zzz.yyy.x --mode start --verbose
 ``` 
-7. Transfer binary files, logs, etc. and convert to .csv format:
+8. Transfer binary files, logs, etc. and convert to .csv format:
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
 scp root@rp-f01735:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data_files/
@@ -105,24 +110,24 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 2. Login to golem PC
 3. Check Program Options:
  ```bash
- cd ~/git-repos/esther-python/pulse-schedule
-./pulse-start.py -h  
+ cd ~/git-repos/esther-ops/pulse-sequence
+./pulse-ops.py -h  
 ``` 
 4. Check Red Pitaya Acquisition Config 
 ```bash
-./pulse-start.py -r 10.10.136.2xx -c
+./pulse-ops.py -r 10.10.136.2xx -c
 ``` 
 5. Arm Quantel Laser single pulse and Start Flash lamp
 ```bash
-./pulse-start.py -a
+./pulse-ops.py -a
 ``` 
 6. Fire Laser and Acquisition
 ```bash
-./pulse-start.py -r 10.10.136.2xx -f
+./pulse-ops.py -r 10.10.136.2xx -f
 ``` 
 7. Set Quantel Laser to Standby  Mode
 ```bash
-./pulse-start.py -s
+./pulse-ops.py -s
 ``` 
 8. Transfer Red Pitaya files and convert to csv, if necessary.
 ```bash
@@ -134,5 +139,56 @@ convert_tool data_files/data_file_2024-xxxxx.bin
  ```bash
 ./plotRPbin.py -m 10000000 -f data_files/data_file_2024-xxxxx  # (no extension)
 ``` 
+
+## Streak Camera Trigger System
+[FPGA Project Repo](https://github.com/bernardocarvalho/ad-ipfn-hdl), branch 'esther_trigger_2019.1'   
+[Linux Device  Driver and apps Repo](https://github.com/ipfn-hpl/esther_dma_ip_drivers), branch 'esther_trigger_2019.1'
+
+1. Start PC and load FPGA board drivers
+2. Login to PC
+ ```bash
+ssh esther@acis.local  # or just: `ssh acis`
+ll /dev/fmc_xdma0_*
+lsmod| grep xdma
+# if not found, go to 
+cd ~/fpga/esther_dma_ip_drivers/XDMA/linux-kernel/xdma
+# compile driver and install
+make clean
+make
+sudo make install
+depmod -a
+modprobe xdma
+lspci | grep Xi
+``` 
+3. Load fpga configuration.
+ ```bash
+cd ~/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct 
+./xsct.sh -interactive upload_fpga.tcl # take ~ 2 minutes
+
+... Setting PC to Program Start Address 0x80000000
+Successfully downloaded /home/esther/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct/simpleImage.kc705_fmcjesdadc1
+Info: MicroBlaze #0 (target 4) Running
+
+``` 
+4. Refresh Linux PCIe devices
+ ```bash
+cd ~/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct 
+./xsct.sh -interactive upload_fpga.tcl # take ~ 2 minutes
+lspci | grep Xi
+sudo echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
+sudo echo 1 > /sys/bus/pci/rescan
+lspci | grep Xi
+``` 
+5. Test CLI app 
+ ```bash
+cd ~/fpga/esther_dma_ip_drivers/XDMA/linux-kernel/tools
+./estherdaq  -a 0x2328fe0c -b 0x1f4dcd8 -c 0x2328fe0c -s 0x800000 -m 0x31999 -t
+ ```
+ 6. Run GUI 
+ ```bash
+ssh -X esther@acis.local
+cd ~/fpga/esther_dma_ip_drivers/XDMA/linux-kernel/tools
+ ```
+
 
 
