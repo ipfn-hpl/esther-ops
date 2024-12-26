@@ -37,7 +37,7 @@ sudo systemctl start epics-css-archive.service
 
 ### Start Systems:
 
-1. Login to golem PC with esther account
+1. Open terminal in golem PC, with esther account
 2. Check if Gas Switchboard is powered
   * Wait 3 min and check if all Epics IOCs are running
 ```bash
@@ -91,7 +91,7 @@ rpsa_client --detect
 rpsa_client --config --hosts=10.zzz.yyy.x --get=VV
 ``` 
 
-(Skip next steps if are using *Automated Pulse Sequence*, next sections)
+(Skip next steps if are using *Automated Pulse Sequence*, next section)
 
 7. Run manual acquisition:
  ```bash
@@ -108,7 +108,7 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 ## Automated Pulse Trigger and  Data Acquisition Sequence.
 
 1. Start Red pitaya server as described in previous step.  Note IP address.
-2. Login to golem PC
+2. Open terminal in golem PC, with esther account
 3. Check Program Options:
  ```bash
  cd ~/git-repos/esther-ops/pulse-sequence
@@ -122,11 +122,11 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 ```bash
 ./pulse-ops.py -a
 ``` 
-6. Fire Laser and Acquisition
+6. Fire Laser and Acquisition Sequence
 ```bash
 ./pulse-ops.py -r 10.10.136.2xx -f
 ``` 
-7. Set Quantel Laser to Standby  Mode
+7. Set Quantel Laser to Standby Mode (Stop Flash lamp)
 ```bash
 ./pulse-ops.py -s
 ``` 
@@ -146,7 +146,7 @@ convert_tool data_files/data_file_2024-xxxxx.bin
 [Linux Device  Driver and apps Repo](https://github.com/ipfn-hpl/esther_dma_ip_drivers), branch 'esther_trigger_2019.1'
 
 1. Start PC and load FPGA board drivers
-2. Login to PC
+2. Open terminal in ACIS PC, with esther account
  ```bash
 ssh esther@acis.local  # or just: `ssh acis`
 ll /dev/fmc_xdma0_*
