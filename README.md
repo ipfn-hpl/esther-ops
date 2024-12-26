@@ -80,7 +80,7 @@ ssh root@rp-f01735.local
 ping rp-f01735.local
 ssh root@rp-f01735.local
 ip address
-# if needed:
+# on first acquisition, if needed:
 streaming-server.local.sh streaming_config_local_ch1_16b_16d_16MS
 mount -o size=128m -t tmpfs tmpfs /tmp/stream_files
 ``` 
@@ -92,6 +92,7 @@ rpsa_client --config --hosts=10.zzz.yyy.x --get=VV
 ``` 
 
 (Skip next steps if are using *Automated Pulse Sequence*, next sections)
+
 7. Run manual acquisition:
  ```bash
 rpsa_client --remote --hosts=10.zzz.yyy.x --mode start --verbose
