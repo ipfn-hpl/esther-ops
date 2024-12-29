@@ -9,11 +9,29 @@ https://stackoverflow.com/questions/8241099/executing-tasks-in-parallel-in-pytho
 import argparse
 import serial
 import io
+import signal
 import time
-from threading import Thread
 import subprocess
-
+from threading import Thread
 from epics import caget, caput  # , cainfo
+
+MFC_ST_FSETPOINT = 9.0  # Esther:MFC-ST:FSetpoint.HOPR
+MFC_CT_FSETPOINT = 10.0  # Esther:MFC-CT:FSetpoint.HOPR
+
+
+class GracefulKiller:
+    keep_run = True
+
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+    def exit_gracefully(self, signum, frame):
+        print('Got SIGNAL')
+        self.keep_run = False
+
+
+killer = GracefulKiller()
 
 
 class kistlerCom():
@@ -177,8 +195,7 @@ def parse_args():
                         action='store_true', help='Set Quantel in Standby')
     parser.add_argument('-c', '--redpitayaConfig',
                         action='store_true', help='Check Red Pitaya Config')
-    parser.add_argument('-f', '--fire',
-                        action='store_true',
+    parser.add_argument('-f', '--fire', action='store_true',
                         help='Fire ESTHER Pulse and acquisition')
     parser.add_argument('-t', '--trigger',
                         action='store_true',
@@ -187,6 +204,8 @@ def parse_args():
                         action='store_true', help='Reset Kistler')
     parser.add_argument('-g', '--kistlerRange',
                         type=int, default=0, help='Set Kistler Range')
+    parser.add_argument('-m', '--mfcEpics', action='store_true',
+                        help='Start Test Gases MFCs')
     return parser.parse_args()
 
 
@@ -195,7 +214,7 @@ def taskResetKistler():
     reply = kt.measureReset()
     kt.close()
     time.sleep(2)
-    print("Task 1 Finished")
+    print("Task Reset Kistler Finished")
 
 
 def task1():
@@ -234,6 +253,15 @@ def taskEpics():
     time.sleep(1.0)
     caput('Esther:MFC-CT:Reset', 0)
     caput('Esther:MFC-ST:Reset', 0)
+    gvc = 1
+    gvs = 0
+    while killer.keep_run and (gvc == 0 or gvs == 0):
+        gvc = caget('Esther:HVA:CTST-Valve')
+        gvs = caget('Esther:HVA:STDT-Valve')
+        print(f'GV-CTST: {gvc},  GV-STDT: {gvs}')
+        time.sleep(1)  # Sleep seconds
+    # caput("Esther:MFC-CT:FSetpoint", MFC_CT_FSETPOINT)
+    # caput("Esther:MFC-ST:FSetpoint", MFC_ST_FSETPOINT)
 
 
 def checkRPitayaConfig(host="10.10.136.232"):
@@ -256,17 +284,14 @@ def firePulse(host="10.10.136.223"):
     t0 = Thread(target=taskResetKistler)
     t1 = Thread(target=taskRPitayaStart, args=(host,))
     t2 = Thread(target=taskFireQuantel)
-    t3 = Thread(target=taskEpics)
 
     t0.start()
     t1.start()
     t2.start()
-    t3.start()
 
     t0.join()
     t1.join()
     t2.join()
-    t3.join()
 
 
 if __name__ == '__main__':
@@ -315,6 +340,12 @@ if __name__ == '__main__':
     if args.fire:
         firePulse(args.host_rp)
 
+    if args.mfcEpics:
+        t1 = Thread(target=taskEpics)
+        t1.start()
+        t1.join()
+
+    print("Program Finished")
     # if your arduino was running on a serial port other than '/dev/ttyACM0/'
     # declare: qt = quantel(serial_port='/dev/ttyXXXX')
 
