@@ -97,20 +97,20 @@ Make sure you have downloaded the important files!!!
     * Download Client tools [here](https://downloads.redpitaya.com/downloads/Clients/streaming).
  ```bash
 rpsa_client --detect
-rpsa_client --config --hosts=10.zzz.yyy.x --get=VV
+rpsa_client --config --hosts=192.168.0.x --get=VV
 ``` 
 
 :bulb: (Skip next steps if are using *Automated Pulse Sequence*, next section)
 
 8. Run manual acquisition:
  ```bash
-rpsa_client --remote --hosts=10.zzz.yyy.x --mode start --verbose
+rpsa_client --remote --hosts=192.168.0.x --mode start --verbose
 ``` 
 9. Transfer binary files, logs, etc. and convert to .csv format:
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
 scp root@rp-f01735:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data-files/
-convert_tool data-files/data_file_2024-xxxxx.bin
+convert_tool data-files/data_file_2025-xxxxx.bin
 ``` 
 
 
@@ -125,7 +125,7 @@ convert_tool data-files/data_file_2024-xxxxx.bin
 ``` 
 4. Check Red Pitaya Acquisition Config 
 ```bash
-./pulse-ops.py -r 10.10.136.2xx -c
+./pulse-ops.py -r 192.168.0.x -c
 ``` 
 5. Arm Quantel Laser single pulse and Start Flash lamp
 ```bash
@@ -133,7 +133,7 @@ convert_tool data-files/data_file_2024-xxxxx.bin
 ``` 
 6. Fire Laser and Acquisition Sequence
 ```bash
-./pulse-ops.py -r 10.10.136.2xx -f
+./pulse-ops.py -r 192.168.0.x -f
 ``` 
 7. Set Quantel Laser to Standby Mode (Stop Flash lamp)
 ```bash
@@ -143,11 +143,11 @@ convert_tool data-files/data_file_2024-xxxxx.bin
 ```bash
 cd ~/git-repos/esther-ops/red-pitaya
 scp root@rp-f01735.local:/tmp/stream_files/data_file_202y-xx-xxx.bin\* data-files/
-convert_tool data-files/data_file_2024-xxxxx.bin
+convert_tool data-files/data_file_2025-xxxxx.bin
 ``` 
 9. Plot Red Pitaya Plots
  ```bash
-./plotRPbin.py -m 10000000 -f data-files/data_file_2024-xxxxx  # (no extension)
+./plotRPbin.py -m 10000000 -f data-files/data_file_2025-xxxxx  # (no extension)
 ``` 
 
 ## Streak Camera Trigger System
