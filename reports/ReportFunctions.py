@@ -10,6 +10,8 @@ https://mysqlclient.readthedocs.io/user_guide.html
 Detect Mode:
 	This mode allows you to determine the IP addresses that are in the network in streaming mode. By default, the search takes 5 seconds.
 
+ssh -X -t golem 'cd /home/esther/git-repos/esther-ops/reports; zsh -l'
+
 """
 
 import argparse
@@ -65,6 +67,7 @@ class EstherDB():
         self.curDict = db.cursor(MySQLdb.cursors.DictCursor)
         self.lastShotId = 300
         self.lastShotNo = 100
+        self.PrepPLC = []
         self.GetLastShot()
 
     def ImportOldShot(self, shot, series='S'):
@@ -229,15 +232,17 @@ class EstherDB():
             "WHERE id = %s")
         self.curDict.execute(query, (shot_id,))
         fo = self.curDict.fetchone()
-        ambient = {}
-        ambient['T'] = 20  # Celsius
-        ambient['P'] = 1013  # mBar
+        # ambient = readMeteo()
+
+        meteoLisbon = readMeteo()
+        # ambient['T'] = 20  # Celsius
+        # ambient['P'] = 1013  # mBar
         if fo is not None:
             cols = ['He0', 'O2', 'He1', 'H2', 'He2', 'Sum']
             data = []
             sumSp = fo['O2_sp'] + fo['He_sp'] + fo['H2_sp']
-            ppHe0 = 1.0  # Change to Measure
-            mfHe0 = ppHe0 / fo['cc_pressure_sp']  # 
+            ppHe0 = meteoLisbon['PressureLisbon'] / 1000.0
+            mfHe0 = ppHe0 / fo['cc_pressure_sp']  #
             mfO2 = fo['O2_sp'] / sumSp
             mfHe1 = heRatio * fo['He_sp'] / sumSp - mfHe0
             mfH2 = fo['H2_sp'] / sumSp
@@ -269,7 +274,7 @@ class EstherDB():
             data.append(row)
             #
             # "P_partial (ref)",
-            Tcorr = TEMPERATURE_REF / (ambient['T'] + TEMPERATURE_REF)
+            Tcorr = TEMPERATURE_REF / (meteoLisbon['TemperatureLisbon'] + TEMPERATURE_REF)
             ppHe0ref = ppHe0 * Tcorr
             row = [ppHe0ref]
             ppO2ref = ppO2 * Tcorr
@@ -313,6 +318,19 @@ class EstherDB():
             row.append(ppHe2acum)
             row.append(fo['cc_pressure_sp'])
             data.append(row)
+            # "P_acum (amb)"
+            row = [0.0]
+            ppO2acum = ppO2
+            row.append(ppO2acum)
+            ppHe1acum = ppO2acum + ppHe1
+            row.append(ppHe1acum)
+            ppH2acum = ppHe1acum + ppH2
+            row.append(ppH2acum)
+            ppHe2acum = ppH2acum + ppHe2
+            row.append(ppHe2acum)
+            row.append(fo['cc_pressure_sp'] - ppHe0)
+            data.append(row)
+            self.PrepPLC = row
             #
             df = pd.DataFrame(
                     data,
@@ -321,7 +339,7 @@ class EstherDB():
             # breakpoint()
             df.index = ["Molar Fraction Setpoint", "P_partial (amb)",
                         "P_partial (ref)", "Liter (ambient)",  "Liter (ref)",
-                        "P_acum (amb)",]
+                        "P_acum (amb)", "P_acum (relative)",]
             self.pulseDf = df
             return df
 

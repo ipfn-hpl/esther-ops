@@ -30,14 +30,14 @@ IPMA_URL = ('https://api.ipma.pt/open-data/observation/'
 
 
 def readMeteo():
-    with urllib.request.urlopen(IPMA_URL, timeout=4) as url:
+    with urllib.request.urlopen(IPMA_URL, timeout=2) as url:
         gj = geojson.load(url)
         # data = json.load(url)
     # Now, let's print the GeoJSON data to understand its structure
     # pp.pprint(dict(gj))
     features = gj['features']
     printLoc = True
-    ambient = []
+    ambient = {}
     for feat in features:
         prop = feat['properties']
         if feat['properties']['idEstacao'] == 1200579:
@@ -49,9 +49,8 @@ def readMeteo():
             temp = prop['temperatura']
             press = prop['pressao']
             hum = prop['humidade']
-            print("time %s, temperatura %.2f ºC" % (time, press), end='')
+            print("time %s, temperatura %.2f ºC" % (time, temp), end='')
             # print(", temperatura %.2f ºC" % temp, end='')
-            # print(", pressao %.2f mBar" % prop['pressao'], end='')
             # print(", humidade %.1f%%" % prop['humidade'])
             caput('Esther:gas:Pressure', press)
             caput('Esther:gas:Humidity', hum)
@@ -60,10 +59,11 @@ def readMeteo():
             print(", caput Esther:gas:Humidity  %.1f%% " % prop['humidade'])
 
     if not printLoc:
-        ambient.append(time)
-        ambient.append(temp)
-        ambient.append(press)
-        ambient.append(hum)
+        ambient['TemperatureLisbon'] = temp  # Celsius
+        ambient['PressureLisbon'] = press
+        ambient['HumidityLisbon'] = hum
+        ambient['TimeLisbon'] = time
+        # ambient.append(time)
         return ambient
     else:
         pass

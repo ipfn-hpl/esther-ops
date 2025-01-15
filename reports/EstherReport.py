@@ -174,13 +174,13 @@ class MainWindow(QMainWindow):
         self.tableViewReports = QTableView()
         self.tableViewReports.setModel(model)
 
-        self.search = QLineEdit()
+        # self.search = QLineEdit()
 
         # add_rec = QPushButton("Add record")
         # add_rec.clicked.connect(self.add_row)
 
         refreshButt = QPushButton("Refresh")
-#        refreshButt.clicked.connect(self.refresh_model)
+        refreshButt.clicked.connect(self.updateTables)
 
 #        layoutTools.addWidget(add_rec)
 #        self.list = QLineEdit()
@@ -258,10 +258,18 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tablePrep)
         heSlider = QSlider(Qt.Orientation.Horizontal, self)
         heSlider.setRange(0, 100)
+        heSlider.setValue(60)
+        heSlider.valueChanged.connect(self.heSlider_changed)
         # heSlider.setMaximum(10)
-        layout.addWidget(heSlider)
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(QLabel('Amb. Temp'))
+        tempEdit = QLineEdit("21.3")
+        tempEdit.setMaxLength(10)
+        hlayout.addWidget(tempEdit)
+        hlayout.addWidget(QLabel('He 1/2 Ratio: '))
+        hlayout.addWidget(heSlider, stretch=3)
+        layout.addLayout(hlayout)
         layout.addWidget(self.tablePrep2)
-        layout.addWidget(QLabel('Amb. Temp'))
         self.tabs.addTab(calc_page, 'Pulse Preparation')
 
         layoutTables.addWidget(self.tabs, stretch=3)
@@ -316,6 +324,10 @@ class MainWindow(QMainWindow):
     # def combo_changed(self, i):
     #    print(i)
 
+    def heSlider_changed(self, i):
+        self.HeRatio = i / 100.0
+        print(f"HeRatio: {self.HeRatio}")
+
     def clearTable(self, table, data):
         model = SimpleModel(data)
         table.setModel(model)
@@ -369,7 +381,7 @@ class MainWindow(QMainWindow):
         else:
             model = PandasModel(df)
             self.tablePulseData.setModel(model)
-        df = self.eDb.PrepShot(self.shotId, 0.6)
+        df = self.eDb.PrepShot(self.shotId, self.HeRatio)
         if df is None:
             pass
             # self.clearBottleTable()
@@ -442,8 +454,6 @@ class MainWindow(QMainWindow):
     def set_table_val(self, table, val, lin, col):
         item = QTableWidgetItem(f'{val:0.2f}')
         table.setItem(lin, col, item)
-
-
 
     def update_queryReports(self, s=None):
         # print(Qt.CheckState(self.ceChck) == Qt.CheckState.Checked)
