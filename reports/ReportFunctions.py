@@ -233,49 +233,95 @@ class EstherDB():
         ambient['T'] = 20  # Celsius
         ambient['P'] = 1013  # mBar
         if fo is not None:
-            cols = ['O2', 'He1', 'H2', 'He2', 'Sum']
+            cols = ['He0', 'O2', 'He1', 'H2', 'He2', 'Sum']
             data = []
             sumSp = fo['O2_sp'] + fo['He_sp'] + fo['H2_sp']
-            row = [fo['O2_sp'], (1.0 - heRatio) * fo['He_sp'],
-                   fo['H2_sp'], heRatio * fo['He_sp'], sumSp,]
+            ppHe0 = 1.0  # Change to Measure
+            mfHe0 = ppHe0 / fo['cc_pressure_sp']  # 
+            mfO2 = fo['O2_sp'] / sumSp
+            mfHe1 = heRatio * fo['He_sp'] / sumSp - mfHe0
+            mfH2 = fo['H2_sp'] / sumSp
+            mfHe2 = (1.0 - heRatio) * fo['He_sp'] / sumSp
+            sumMf = mfHe0 + mfO2 + mfHe1 + mfH2 + mfHe2
+            # "Molar Fraction Setpoint",
+            row = [mfHe0, mfO2, mfHe1,
+                   mfH2, mfHe2, sumMf,]
             data.append(row)
-            row = []
-            ppO2 = fo['O2_sp'] / sumSp * fo['cc_pressure_sp']
+            #
+            # "P_partial (amb)",
+            row = [ppHe0]
+            ppO2 = mfO2 * fo['cc_pressure_sp']
             row.append(ppO2)
-            ppHe1 = (1.0 - heRatio) * fo['He_sp'] / sumSp * \
-                fo['cc_pressure_sp'] + ppO2
+            ppHe1 = mfHe1 * fo['cc_pressure_sp']
+            # ppHe1 = (1.0 - heRatio) * fo['He_sp'] / sumSp * \
+            #    fo['cc_pressure_sp'] + ppO2
             row.append(ppHe1)
-            ppH2 = fo['H2_sp'] / sumSp * fo['cc_pressure_sp'] + ppHe1
+            ppH2 = mfH2 * fo['cc_pressure_sp']
             row.append(ppH2)
-            ppHe2 = heRatio * fo['He_sp'] / sumSp * \
-                fo['cc_pressure_sp'] + ppH2
+            ppHe2 = mfHe2 * fo['cc_pressure_sp']
+            # ppHe2 = heRatio * fo['He_sp'] / sumSp * \
+            #    fo['cc_pressure_sp'] + ppH2
             row.append(ppHe2)
-            row.append(fo['cc_pressure_sp'])
+            sumPp = ppHe0 + ppO2 + ppHe1 + ppH2 + ppHe2
+            # row.append(fo['cc_pressure_sp'])
+            row.append(sumPp)
+            # fo['cc_pressure_sp'])
             data.append(row)
-            row = []
+            #
+            # "P_partial (ref)",
             Tcorr = TEMPERATURE_REF / (ambient['T'] + TEMPERATURE_REF)
+            ppHe0ref = ppHe0 * Tcorr
+            row = [ppHe0ref]
             ppO2ref = ppO2 * Tcorr
-            row = [ppO2ref]
+            row.append(ppO2ref)
             # row.append(ppO2ref)
-            ppHe1ref = ppHe1 * Tcorr # / ambient['T'] * TEMPERATURE_REF
+            ppHe1ref = ppHe1 * Tcorr
             row.append(ppHe1ref)
-            ppH2ref = ppH2 * Tcorr #  / ambient['T'] * TEMPERATURE_REF
+            ppH2ref = ppH2 * Tcorr
             row.append(ppH2ref)
-            ppHe2ref = ppHe2 * Tcorr # // ambient['T'] * TEMPERATURE_REF
+            ppHe2ref = ppHe2 * Tcorr  # // ambient['T'] * TEMPERATURE_REF
             row.append(ppHe2ref)
             data.append(row)
+            #
+            # "Liter (ambient)"
+            row = [VOLUME_DRIVER]
             volO2 = ppO2 * VOLUME_DRIVER
-            row = [volO2]
+            row.append(volO2)
+            volHe1 = ppHe1 * VOLUME_DRIVER
+            row.append(volHe1)
+            volH2 = ppH2 * VOLUME_DRIVER
+            row.append(volH2)
+            volHe2 = ppHe2 * VOLUME_DRIVER
+            row.append(volHe2)
             data.append(row)
+            #
+            # "Liter (ref)",
+            row = [VOLUME_DRIVER * Tcorr]
             volO2ref = ppO2ref * VOLUME_DRIVER
-            row = [volO2ref]
+            row.append(volO2ref)
             data.append(row)
+            #
+            # "P_acum (amb)"
+            row = [ppHe0]
+            ppO2acum = ppHe0 + ppO2
+            row.append(ppO2acum)
+            ppHe1acum = ppO2acum + ppHe1
+            row.append(ppHe1acum)
+            ppH2acum = ppHe1acum + ppH2
+            row.append(ppH2acum)
+            ppHe2acum = ppH2acum + ppHe2
+            row.append(ppHe2acum)
+            row.append(fo['cc_pressure_sp'])
+            data.append(row)
+            #
             df = pd.DataFrame(
                     data,
                     columns=cols,
             )
-            df.index = ["Ratio Setpoint", "P_partial (amb)",
-                        "P_partial (ref)", "Liter (ambient)",  "Liter (ref)",]
+            # breakpoint()
+            df.index = ["Molar Fraction Setpoint", "P_partial (amb)",
+                        "P_partial (ref)", "Liter (ambient)",  "Liter (ref)",
+                        "P_acum (amb)",]
             self.pulseDf = df
             return df
 
