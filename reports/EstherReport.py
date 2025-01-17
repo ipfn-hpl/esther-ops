@@ -11,7 +11,7 @@ import os
 import sys
 
 from PyQt6.QtCore import QSize, QDate, Qt
-from PyQt6 import QtCore
+# from PyQt6 import QtCore
 
 from PyQt6.QtGui import QAction, QIcon, QPixmap  # QFont
 
@@ -238,8 +238,14 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(summary, 'Pulse Summary')
         self.tableBottles = QTableView()
         self.tabs.addTab(self.tableBottles, 'Bottle Pressures')
+        page = QWidget()
+        vlayout = QVBoxLayout()
         self.tablePulseData = QTableView()
-        self.tabs.addTab(self.tablePulseData, 'Pulse Data')
+        vlayout.addWidget(self.tablePulseData)
+        self.tablePulseData2 = QTableView()
+        vlayout.addWidget(self.tablePulseData2)
+        page.setLayout(vlayout)
+        self.tabs.addTab(page, 'Pulse Data')
         # Pulse Preparation
         layout = QVBoxLayout()
         model = QSqlTableModel(db=db)
@@ -269,7 +275,7 @@ class MainWindow(QMainWindow):
         hlayout.addWidget(QLabel('He 1/2 Ratio: '))
         hlayout.addWidget(heSlider, stretch=3)
         layout.addLayout(hlayout)
-        layout.addWidget(self.tablePrep2)
+        layout.addWidget(self.tablePrep2, stretch=2)
         self.tabs.addTab(calc_page, 'Pulse Preparation')
 
         layoutTables.addWidget(self.tabs, stretch=3)

@@ -48,6 +48,10 @@ PULSE_VALS = [
 
 VOLUME_DRIVER = 50.35
 TEMPERATURE_REF = 273.15  # K
+INV_FLOW_He_MAX = (0.9 / 50 + 0.1 / 10)  # mn / ln
+FLOW_O2_MAX = (2000 / 60)  # ln / mn
+FLOW_H2_MAX = (2000 / 60)  # ln / mn
+
 
 class EstherDB():
     """
@@ -304,6 +308,26 @@ class EstherDB():
             row = [VOLUME_DRIVER * Tcorr]
             volO2ref = ppO2ref * VOLUME_DRIVER
             row.append(volO2ref)
+            volHe1ref = ppHe1ref * VOLUME_DRIVER
+            row.append(volHe1ref)
+            volH2ref = ppH2ref * VOLUME_DRIVER
+            row.append(volH2ref)
+            volHe2ref = ppHe2ref * VOLUME_DRIVER
+            row.append(volHe2ref)
+            data.append(row)
+
+            TimeHe0 = 10  # min
+            row = [TimeHe0]
+            TimeO2 = volO2ref / FLOW_O2_MAX
+            row.append(TimeO2)
+            TimeHe1 = volHe1ref * INV_FLOW_He_MAX
+            row.append(TimeHe1)
+            TimeH2 = volH2ref / FLOW_O2_MAX
+            row.append(TimeH2)
+            TimeHe2 = volHe2ref * INV_FLOW_He_MAX
+            row.append(TimeHe2)
+            SumTime = TimeHe0 + TimeO2 + TimeHe1 + TimeH2 + TimeHe2
+            row.append(SumTime)
             data.append(row)
             #
             # "P_acum (amb)"
@@ -339,7 +363,7 @@ class EstherDB():
             # breakpoint()
             df.index = ["Molar Fraction Setpoint", "P_partial (amb)",
                         "P_partial (ref)", "Liter (ambient)",  "Liter (ref)",
-                        "P_acum (amb)", "P_acum (relative)",]
+                        "Fill Time / min", "P_acum (amb)", "P_acum (relative)",]
             self.pulseDf = df
             return df
 
@@ -409,11 +433,30 @@ class EstherDB():
         if fo is not None:
             return fo[0]
 
+    def GetPulseData2(self, shot_id):
+        # c = self.db.cursor()
+        c = self.cursor
+        data = []
+        cols = []
+
+        data2 = []
+        cols2 = []
+
+        # ddict = {}
+        for p in PULSE_VALS:
+            query = ("SELECT float_val FROM sample "
+                     "WHERE reports_id = %s "
+                     "AND short_name = %s "
+                     "AND pulse_phase = %s")
+
     def GetPulseData(self, shot_id):
         # c = self.db.cursor()
         c = self.cursor
         data = []
         cols = []
+
+        data2 = []
+        cols2 = []
 
         # ddict = {}
         for p in PULSE_VALS:
