@@ -409,16 +409,23 @@ class EstherDB():
         if meteoLisbon is not None:
             try:
                 c.executemany(query, [
-                    (meteoLisbon[0], new_id, 'ambientTemperature',
-                     'CC_Start', meteoLisbon[1]),
-                    (meteoLisbon[0], new_id, 'ambientPressure',
-                     'CC_Start', meteoLisbon[2]),
-                    (meteoLisbon[0], new_id, 'ambientHumidity',
-                     'CC_Start', meteoLisbon[3]),
+                    (meteoLisbon['TimeLisbon'], new_id, 'ambientTemperature',
+                     'CC_Start', meteoLisbon['TemperatureLisbon']),
+                    (meteoLisbon['TimeLisbon'], new_id, 'ambientPressure',
+                     'CC_Start', meteoLisbon['PressureLisbon']),
+                    (meteoLisbon['TimeLisbon'], new_id, 'ambientHumidity',
+                     'CC_Start', meteoLisbon['HumidityLisbon']),
                     ])
                 # MySQLdb._exceptions.IntegrityError
             except MySQLdb._exceptions.IntegrityError:
                 print('1062, Duplicate entry ')
+        query = ("INSERT INTO complete VALUES "
+                 "(NULL, %s, current_timestamp(), "
+                 "1 , 0, NULL)")
+        try:
+            c.execute(query, (new_id,))
+        except MySQLdb._exceptions.IntegrityError:
+            print('Item complete, Duplicate entry ')
 
         self.db.commit()
         # return self.GetLastShot(series)
@@ -432,6 +439,8 @@ class EstherDB():
         fo = c.fetchone()
         if fo is not None:
             return fo[0]
+        else:
+            print(c._last_executed)
 
     def GetPulseData2(self, shot_id):
         # c = self.db.cursor()

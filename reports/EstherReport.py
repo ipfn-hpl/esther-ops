@@ -69,7 +69,8 @@ basedir = os.path.dirname(__file__)
 
 CENTIG_ZERO = 273.15  # K
 BAR_TO_ATM = 1.013
-IMAGE_PATH = "/home/esther/git-repos/esther-ops/red-pitaya"
+# IMAGE_PATH = "/home/esther/git-repos/esther-ops/reports/icons"
+IMAGE_PATH = "/home/esther/git-repos/esther-ops/red-pitaya/"
 
 ADJUSTTOCONTENTS_POL = QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
 
@@ -154,8 +155,8 @@ class MainWindow(QMainWindow):
         self.shotId = self.eDb.lastShotId
         self.shotNo = self.eDb.lastShotNo
         self.lastShotNo = self.eDb.lastShotNo
-        self.shotId = 207  # self.lastShotId
-        self.shotNo = 7  # self.lastShotNo
+        self.shotId = 311  # self.lastShotId
+        self.shotNo = 111  # self.lastShotNo
         # self.tableReports = QTableView()
         container = QWidget()
         layoutMain = QHBoxLayout()
@@ -209,10 +210,14 @@ class MainWindow(QMainWindow):
         layout.addLayout(layoutF)
         plot = self.eDb.GetPulsePlot(self.shotId)
         if plot is None:
-            file = IMAGE_PATH + '/data_file_2024-12-26_18-01-03.png'
+            print("NO plot file")
+            # file = IMAGE_PATH + '/data_file_2024-12-26_18-01-03.png'
+            pixmap = QPixmap()
+            pixmap.swap(QPixmap())
         else:
             file = IMAGE_PATH + plot
-        pixmap = QPixmap(file)
+            print(f"{self.shotId}, plot file: {file}")
+            pixmap = QPixmap(file)
         # IMAGE_PATH + '/data_file_2024-12-26_18-01-03.png')
         label = QLabel()
         label.setPixmap(pixmap)
