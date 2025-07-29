@@ -39,10 +39,11 @@ class kistlerCom():
     Serial connection to Kistler 5015 on CC
     """
 
-    def __init__(self, serial_port='/dev/ttyUSB0', baud_rate=115200,
+    # def __init__(self, serial_port='/dev/ttyUSB0', baud_rate=115200,
+    def __init__(self, serial_port='/dev/ttyKistler', baud_rate=115200,
                  read_timeout=1):
         """
-        Initializes the serial connection to the Arduino board
+        Initializes the serial connection to the Kistler Charge Meter
         """
         self.ser = serial.Serial(serial_port, baud_rate, timeout=read_timeout)
         print(self.ser.name)         # check which port was really used
