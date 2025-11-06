@@ -11,6 +11,8 @@ https://github.com/Terrabits/rohdeschwarz
 import argparse
 from rohdeschwarz.instruments import GenericInstrument
 
+IP_CC = '192.168.0.35'
+IP_CT = '192.168.0.36'
 
 class rohdeCom():
     """
@@ -24,12 +26,12 @@ class rohdeCom():
         self.gi.open_log(log_file)
         # Print headers:
         # print_header(gi.log, "gi Example", "0.0.1")
-        print(self.gi.id_string())
-        print(self.gi.print_info())
 
     def test(self):
         if self.gi.is_rohde_schwarz():
             print("It is R&S")
+            print(self.gi.id_string())
+            print(self.gi.print_info())
 
     def stop(self):
         self.gi.write("STOP")
@@ -54,6 +56,49 @@ class rohdeCom():
         # Selects the trigger input. 1...4 select the corresponding analog
         # redundant?
         self.gi.write(f"TRIG:A:LEV{channel:d}:VAL {level:f}")  # Trigger level 0.05V
+
+    def ct_config(self):
+        self.gi.write("*RST")  # reset
+        self.gi.write("ACQ:POIN:AUT ON")  # The instrument fits to the selected timebase.
+        self.gi.write("TIM:SCAL 0.1")  # 10ms Acquisition time
+        self.gi.write("TIMebase:POSition 0.4")
+        self.gi.write("CHAN1:RANG 10")  # Horizontal range 10V (1V/div)
+        # self.gi.write("CHAN1:OFFS -1.0")
+        self.gi.write("CHAN1:POSition -4.0") # vertical position of the waveform in divisions
+        self.gi.write("CHAN1:COUP DC")
+        self.gi.write("CHAN1:STAT ON")
+
+        self.gi.write("CHAN2:RANG 1.0")  # Horizontal range 10V (1V/div)
+        self.gi.write("CHAN2:POSition -3.0")
+        self.gi.write("CHAN2:STAT ON")
+        self.gi.write("CHAN3:STAT ON")
+        self.gi.write("TRIG:A:MODE NORM")
+        self.gi.write("TRIG:A:TYPE EDGE")
+        self.gi.write("TRIG:A:EDGE:SLOP POS")  # Trigger type Edge Positive
+        self.gi.write("TRIG:A:SOUR CH1")
+        self.gi.write("TRIG:A:LEV1:VAL 1.0")  # Trigger level
+        self.gi.write("RUN")
+        # self.gi.write("RUNSingle")
+
+    def cc_config(self):
+        self.gi.write("*RST")  # reset
+        self.gi.write("ACQ:POIN:AUT ON")  # The instrument fits to the selected timebase.
+        self.gi.write("TIM:SCAL 0.1")  # 10ms Acquisition time
+        self.gi.write("TIMebase:POSition 0.4")
+        self.gi.write("CHAN1:RANG 10")  # Horizontal range 10V (1V/div)
+        # self.gi.write("CHAN1:OFFS -1.0")
+        self.gi.write("CHAN1:POSition -4.0") # vertical position of the waveform in divisions
+        self.gi.write("CHAN1:COUP DC")
+        self.gi.write("CHAN1:STAT ON")
+        self.gi.write("CHAN2:STAT ON")
+        self.gi.write("CHAN3:STAT OFF")
+        self.gi.write("TRIG:A:MODE NORM")
+        self.gi.write("TRIG:A:TYPE EDGE")
+        self.gi.write("TRIG:A:EDGE:SLOP POS")  # Trigger type Edge Positive
+        self.gi.write("TRIG:A:SOUR CH1")
+        self.gi.write("TRIG:A:LEV1:VAL 1.0")  # Trigger level
+        #self.gi.write("RUN")
+        self.gi.write("RUNSingle")
 
     def channel_config(self, channel=1, range=10.0):
         chString = f"CHAN{channel:d}, R:{range:0.2f}"
@@ -95,19 +140,45 @@ def parse_args():
     parser = argparse.ArgumentParser(
             description='Script to Control Rohde & Schwarz Oscilloscope')
 
-    parser.add_argument('-r', '--host_rp', default='192.168.0.35',
+    parser.add_argument('-s', '--stop',
+                        action='store_true', help='Stop Aqc')
+    parser.add_argument('-r', '--run',
+                        action='store_true', help='Start Aqc')
+    parser.add_argument('-c', '--cc_config',
+                        action='store_true', help='Config CC Osc')
+    parser.add_argument('-t', '--ct_config',
+                        action='store_true', help='Config CT Osc')
+    parser.add_argument('-p', '--host_rs', default='192.168.0.35',
                         help='Rohde & Schwarz IP address')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
-    rS = rohdeCom()
+    if args.ct_config:
+        rS = rohdeCom(ip_port=IP_CT)
+        rS.ct_config()
+        # rS.test()
+        rS.close()
+        exit()
+    if args.cc_config:
+        rS = rohdeCom(ip_port=IP_CC)
+        rS.cc_config()
+        # rS.test()
+        rS.close()
+        exit()
+    rS = rohdeCom(args.host_rs)
+    if args.stop:
+        rS.stop()
+        exit()
+    if args.run:
+        rS.run()
+        exit()
+
     rS.test()
     # rS.basic_settings(1)
     rS.channel_config(1, 5.0)
     rS.trigger_config(2, 2.0)
-    #rS.stop()
     rS.run()
     rS.close()
 

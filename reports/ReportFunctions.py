@@ -32,6 +32,14 @@ BOTTLES_CHANNELS = [
     {'name': 'PT801', 'pv': 'Esther:gas:PT801'},
 ]
 
+PT901_VALS = [
+    {'name': 'PP_initial', 'channel': 'PT901', 'phase': 'CC_Step1_End'},
+    {'name': 'PP_O2', 'channel': 'PT901', 'phase': 'CC_Step3_End'},
+    {'name': 'PP_He1', 'channel': 'PT901', 'phase': 'CC_Step4_End'},
+    {'name': 'PP_H2', 'channel': 'PT901', 'phase': 'CC_Step6_End'},
+    {'name': 'PP_He2', 'channel': 'PT901', 'phase': 'CC_Step7_End'},
+]
+
 PULSE_VALS = [
     {'name': 'Room T', 'channel': 'ambientTemperature', 'phase': 'CC_Start'},
     {'name': 'Room P', 'channel': 'ambientPressure', 'phase': 'CC_Start'},
@@ -73,6 +81,8 @@ class EstherDB():
         self.lastShotNo = 100
         self.PrepPLC = []
         self.GetLastShot()
+        self.pulseData = {}
+
 
     def ImportOldShot(self, shot, series='S'):
         dbOld = MySQLdb.connect(
@@ -442,21 +452,38 @@ class EstherDB():
         else:
             print(c._last_executed)
 
-    def GetPulseData2(self, shot_id):
+    def FetchPulseData(self, shot_id):
         # c = self.db.cursor()
         c = self.cursor
-        data = []
-        cols = []
 
-        data2 = []
-        cols2 = []
-
-        # ddict = {}
+        ddict = {}
         for p in PULSE_VALS:
             query = ("SELECT float_val FROM sample "
                      "WHERE reports_id = %s "
                      "AND short_name = %s "
                      "AND pulse_phase = %s")
+            c.execute(query, (shot_id, p['channel'], p['phase'],))
+            fo = c.fetchone()
+            if fo is not None:
+                ddict[p['name']] = fo[0]
+            else:
+                print("No ddict data: ", end='')
+                print(c._last_executed)
+                return None
+                #  ddict[p['name']] = fv[0]
+        # dict_keys(['Room T', 'Room P', 'PP_initial', 'PP_O2', 'PP_He1', 'PP_H2', 'PP_He2', 'Post Shot dP', 'Range Kistler', 'Measured P', 'Final P', 'Mf_O2'])
+        if len(ddict) == 9:
+            try:
+                ddict['Measured P'] = ddict['Room P']/1000.0 - \
+                        ddict['PP_initial'] + ddict['PP_He2']
+                ddict['Final P'] = ddict['Measured P'] + ddict['Post Shot dP']
+                ddict['Mf_O2'] = (ddict['PP_O2'] - ddict['PP_initial']) / ddict['Measured P']
+            except TypeError:
+                print("unsupported operand type(s) for /: 'NoneType' and 'float'")
+                # breakpoint()
+        self.pulseData = ddict
+        #breakpoint()
+        return ddict
 
     def GetPulseData(self, shot_id):
         # c = self.db.cursor()
@@ -464,10 +491,6 @@ class EstherDB():
         data = []
         cols = []
 
-        data2 = []
-        cols2 = []
-
-        # ddict = {}
         for p in PULSE_VALS:
             query = ("SELECT float_val FROM sample "
                      "WHERE reports_id = %s "

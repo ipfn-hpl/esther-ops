@@ -223,7 +223,18 @@ def task1():
     print("Task 1 Finished")
 
 
-def taskRPitayaStart(host="10.10.136.233"):
+def taskRPitayaStart(host="192.168.0.34"):
+    # list_files = subprocess.run(["ls", "-l"])
+    # list_files = subprocess.run(["ls", "-l"], stdout=subprocess.DEVNULL)
+    # print("The exit code was: %d" % list_files.returncode)
+    time.sleep(0.5)
+    rp_query = subprocess.run(["/home/esther/.local/bin/rpsa_client",
+                               "--remote",
+                               "--mode=start",
+                               f"--hosts={host:s}"])
+    print("RP Start %s  exit code was: %d" % (host, rp_query.returncode))
+
+def taskRPitayaKintexStart(host="192.168.0.33"):
     # list_files = subprocess.run(["ls", "-l"])
     # list_files = subprocess.run(["ls", "-l"], stdout=subprocess.DEVNULL)
     # print("The exit code was: %d" % list_files.returncode)
@@ -283,16 +294,19 @@ def task5():
 def firePulse(host="10.10.136.223"):
     print("Firing Esther Pulse")
     t0 = Thread(target=taskResetKistler)
-    t1 = Thread(target=taskRPitayaStart, args=(host,))
-    t2 = Thread(target=taskFireQuantel)
+    t1 = Thread(target=taskRPitayaStart)  #, args=(host,))
+    t2 = Thread(target=taskRPitayaKintexStart) # , args=(host,))
+    t3 = Thread(target=taskFireQuantel)
 
     t0.start()
     t1.start()
     t2.start()
+    t3.start()
 
     t0.join()
     t1.join()
     t2.join()
+    t3.join()
 
 
 if __name__ == '__main__':

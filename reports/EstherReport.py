@@ -142,21 +142,11 @@ class MainWindow(QMainWindow):
         # combo.currentIndexChanged.connect(self.combo_changed)
         combo.currentTextChanged.connect(self.seriesChanged)
         # shotId, shotNo = self.eDb.GetLastShot()
-        """
-        result = self.eDb.GetLastShot()
-        if result is not None:
-            print(result)
-            self.lastShotId = result[0]
-            self.lastShotNo = result[1]
-        else:
-            self.lastShotId = 300
-            self.lastShotNo = 100
-        """
         self.shotId = self.eDb.lastShotId
-        self.shotNo = self.eDb.lastShotNo
         self.lastShotNo = self.eDb.lastShotNo
-        self.shotId = 311  # self.lastShotId
-        self.shotNo = 111  # self.lastShotNo
+        self.shotNo = self.lastShotNo
+        # self.shotId = 311  # self.lastShotId
+        # self.shotNo = 111  # self.lastShotNo
         # self.tableReports = QTableView()
         container = QWidget()
         layoutMain = QHBoxLayout()
@@ -169,8 +159,13 @@ class MainWindow(QMainWindow):
         model = QSqlRelationalTableModel(db=db)
         model.setTable('reports')
         # model.setFilter("shot > 100")
+        idx = model.fieldIndex("id")
+        model.setSort(idx, Qt.SortOrder.AscendingOrder)
+        model.setHeaderData(1, Qt.Orientation.Horizontal, 'Series')
         model.setRelation(3, QSqlRelation("operator", "id", "name"))
+        model.setHeaderData(3, Qt.Orientation.Horizontal, 'CE')
         model.setRelation(4, QSqlRelation("operator", "id", "name"))
+        model.setHeaderData(4, Qt.Orientation.Horizontal, 'RE')
         model.select()
         self.tableViewReports = QTableView()
         self.tableViewReports.setModel(model)
@@ -208,23 +203,10 @@ class MainWindow(QMainWindow):
         layoutF.addRow('Last Name:', QLineEdit())
         layoutF.addRow('DOB:', QDateEdit(QDate.currentDate()))
         layout.addLayout(layoutF)
-        plot = self.eDb.GetPulsePlot(self.shotId)
-        if plot is None:
-            print("NO plot file")
-            # file = IMAGE_PATH + '/data_file_2024-12-26_18-01-03.png'
-            pixmap = QPixmap()
-            pixmap.swap(QPixmap())
-        else:
-            file = IMAGE_PATH + plot
-            print(f"{self.shotId}, plot file: {file}")
-            pixmap = QPixmap(file)
-        # IMAGE_PATH + '/data_file_2024-12-26_18-01-03.png')
-        label = QLabel()
-        label.setPixmap(pixmap)
-        label.setScaledContents(True)
+        self.labelPlot = QLabel()
 
         # Add the label to the layout
-        layout.addWidget(label)
+        layout.addWidget(self.labelPlot)
 
         summary.setLayout(layout)
         """
@@ -330,7 +312,7 @@ class MainWindow(QMainWindow):
         container.setLayout(layoutMain)
         self.setMinimumSize(QSize(1200, 700))
         self.setCentralWidget(container)
-        self.updateTables()
+        # self.updateTables()
 
     # def combo_changed(self, i):
     #    print(i)
@@ -382,6 +364,7 @@ class MainWindow(QMainWindow):
             model = PandasModel(df)
             self.tableBottles.setModel(model)
 
+        df = self.eDb.FetchPulseData(self.shotId)
         df = self.eDb.GetPulseData(self.shotId)
         if df is None:
             # self.tablePulseData.model.resetInternalData()
@@ -399,9 +382,22 @@ class MainWindow(QMainWindow):
         else:
             model = PandasModel(df)
             self.tablePrep2.setModel(model)
+
+        plot = self.eDb.GetPulsePlot(self.shotId)
+        if plot is None:
+            print("NO plot file")
+            # file = IMAGE_PATH + '/data_file_2024-12-26_18-01-03.png'
+            pixmap = QPixmap()
+            # pixmap.swap(QPixmap())
+        else:
+            file = IMAGE_PATH + plot
+            print(f"{self.shotId}, plot file: {file}")
+            pixmap = QPixmap(file)
+        self.labelPlot.setPixmap(pixmap)
+        self.labelPlot.setScaledContents(True)
         # breakpoint()
 
-    def seriesChanged(self, ser): # s is a str
+    def seriesChanged(self, ser):  # s is a str
         print(ser)
         # shotId, shotNo = self.eDb.GetLastShot(series=ser)
         # print(f"Id {shotId}, {shotNo}")
@@ -475,21 +471,21 @@ class MainWindow(QMainWindow):
             "esther_managers.manager_name, start_time, end_time "
             "FROM esther_reports "
             "INNER JOIN esther_managers ON esther_reports.manager_id = esther_managers.manager_id "
-            #"WHERE =shot_number :list_id AND DayPlan = :plan_id "
+            # "WHERE =shot_number :list_id AND DayPlan = :plan_id "
             "WHERE shot_number  > 160 "
-            #"WHERE shot_number  = :shot_no "
-            #"ORDER BY LineOrder ASC"
+            # "WHERE shot_number  = :shot_no "
+            # "ORDER BY LineOrder ASC"
         )
-        #query = QSqlQuery("SELECT * FROM 'ChecklistLines' ORDER BY 'ChecklistLines'.'LineOrder' ASC", db=db)
-        #query = QSqlQuery("SELECT * FROM ChecklistLines", db=db)
+        # query = QSqlQuery("SELECT * FROM 'ChecklistLines' ORDER BY 'ChecklistLines'.'LineOrder' ASC", db=db)
+        # query = QSqlQuery("SELECT * FROM ChecklistLines", db=db)
 
         queryReports.bindValue(":shot_no", self.shotNo)
         queryReports.exec()
-        #print(queryReports.lastQuery()) #  + "; Line Before: " + str(lineBefore))
+        # print(queryReports.lastQuery()) #  + "; Line Before: " + str(lineBefore))
         model = QSqlQueryModel()
         model.setQuery(queryReports)
         self.tableReports.setModel(model)
-        self.tableReports.setColumnWidth(0,60)
+        self.tableReports.setColumnWidth(0, 60)
 
 
 app = QApplication(sys.argv)
