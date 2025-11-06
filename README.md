@@ -15,7 +15,7 @@ CS-Studio [App](https://cs-studio.sourceforge.net/docbook/ch11.html)
 for storing data, running as Linux systemd Service:
 
 ```bash
-systemctl status epics-css-archive.servicei
+systemctl status epics-css-archive.service
 # If necessary
 sudo systemctl start epics-css-archive.service
 ```
@@ -32,11 +32,11 @@ sudo systemctl start epics-css-archive.service
 /opt/epics/phoebus.sh -settings ~/.phoebus/settings.ini
 ```
 
-2. Open
+2. Open Panels
 
-- *GasSystem/ValveDisplayOPCUA* Panel
-- *VacuumSystem/VacuumStates* Panel
-- *TestGases/MFC-MainDisplay* Panel
+- *GasSystem/ValveDisplayOPCUA*
+- *VacuumSystem/VacuumStates*
+- *TestGases/MFC-MainDisplay*
 
 Esther Subsystems
 ================
