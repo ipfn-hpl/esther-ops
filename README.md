@@ -202,12 +202,13 @@ ll /dev/fmc_xdma0_*
 lsmod| grep xdma
 # if not found, go to 
 cd ~/fpga/esther_dma_ip_drivers/XDMA/linux-kernel/xdma
+sudo apt-get install  linux-headers-$(uname -r)
 # compile driver and install
 make clean
 make
 sudo make install
-depmod -a
-modprobe xdma
+sudo depmod -a
+sudo modprobe xdma
 lspci | grep Xi
 ```
 
@@ -217,21 +218,20 @@ lspci | grep Xi
 cd ~/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct 
 ./xsct.sh -interactive upload_fpga.tcl # take ~ 2 minutes
 
-... Setting PC to Program Start Address 0x80000000
-Successfully downloaded /home/esther/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct/simpleImage.kc705_fmcjesdadc1
-Info: MicroBlaze #0 (target 4) Running
-
+## ... Setting PC to Program Start Address 0x80000000
+# Successfully downloaded /home/esther/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct/simpleImage.kc705_fmcjesdadc1
+#  Info: MicroBlaze #0 (target 4) Running
 ```
 
 4. Refresh Linux PCIe devices
 
  ```bash
-cd ~/fpga/Vivado/2019.1/ad-ipfn-hdl/projects/fmcjesdadc1/kc705/xsct 
-./xsct.sh -interactive upload_fpga.tcl # take ~ 2 minutes
 lspci | grep Xi
-sudo echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
-sudo echo 1 > /sys/bus/pci/rescan
+# 01:00.0 Serial controller: Xilinx Corporation Device 7028
+sudo bash -c 'echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove'
+sudo bash -c 'echo 1 > /sys/bus/pci/rescan'
 lspci | grep Xi
+ll /dev/fmc_xdma0_*
 ```
 
 5. Test CLI app
@@ -246,4 +246,5 @@ cd ~/fpga/esther_dma_ip_drivers/XDMA/linux-kernel/tools
  ```bash
 ssh -X esther@acis.local
 cd ~/fpga/esther_dma_ip_drivers/XDMA/linux-kernel/tools
+python3 pyqt6Trigger.py&
  ```
