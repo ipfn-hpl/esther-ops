@@ -7,6 +7,9 @@
 "idEstacao": 1210762,
 "localEstacao": "Lisboa, Tapada da Ajuda",
 
+# "idEstacao": 6215302,
+# "localEstacao": "Lisboa, Carnide (CML)",
+#
 "idEstacao": 7240919,
 "localEstacao": "Lisboa, Amoreiras (Lic. Franc\u00eas)",
 
@@ -17,16 +20,20 @@
 "localEstacao": "Lisboa (G.Coutinho)",
 
 """
+
 import geojson
 import urllib.request
 from epics import caput  # , cainfo
 # import pprint as pp
 
-IPMA_URL = ('https://api.ipma.pt/open-data/observation/'
-            'meteorology/stations/obs-surface.geojson')
+IPMA_URL = (
+    "https://api.ipma.pt/open-data/observation/meteorology/stations/obs-surface.geojson"
+)
 # file = 'obs-surface.geojson'
 # with open(file, 'r') as file:
 #    gj2 = geojson.load(file)
+
+ID_ESTACAO = 6215302
 
 
 def readMeteo():
@@ -35,39 +42,39 @@ def readMeteo():
         # data = json.load(url)
     # Now, let's print the GeoJSON data to understand its structure
     # pp.pprint(dict(gj))
-    features = gj['features']
+    features = gj["features"]
     printLoc = True
     ambient = {}
     for feat in features:
-        prop = feat['properties']
-        if feat['properties']['idEstacao'] == 1200579:
+        prop = feat["properties"]
+        if feat["properties"]["idEstacao"] == ID_ESTACAO:  #  1200579:
+            # if feat['properties']['idEstacao'] == 1200579:
             if printLoc:
                 printLoc = False
-                print(feat['properties']['localEstacao'])
+                print(feat["properties"]["localEstacao"])
 
-            time = prop['time']
-            temp = prop['temperatura']
-            press = prop['pressao']
-            hum = prop['humidade']
-            print("time %s, temperatura %.2f ºC" % (time, temp), end='')
+            time = prop["time"]
+            temp = prop["temperatura"]
+            press = prop["pressao"]
+            hum = prop["humidade"]
+            print("time %s, temperatura %.2f ºC" % (time, temp), end="")
             # print(", temperatura %.2f ºC" % temp, end='')
             # print(", humidade %.1f%%" % prop['humidade'])
-            caput('Esther:gas:Pressure', press)
-            caput('Esther:gas:Humidity', hum)
-            print(", caput Esther:gas:Pressure  %.2f mBar " % prop['pressao'],
-                  end='')
-            print(", caput Esther:gas:Humidity  %.1f%% " % prop['humidade'])
+            caput("Esther:gas:Pressure", press)
+            caput("Esther:gas:Humidity", hum)
+            print(", caput Esther:gas:Pressure  %.2f mBar " % prop["pressao"], end="")
+            print(", caput Esther:gas:Humidity  %.1f%% " % prop["humidade"])
 
     if not printLoc:
-        ambient['TemperatureLisbon'] = temp  # Celsius
-        ambient['PressureLisbon'] = press
-        ambient['HumidityLisbon'] = hum
-        ambient['TimeLisbon'] = time
+        ambient["TemperatureLisbon"] = temp  # Celsius
+        ambient["PressureLisbon"] = press
+        ambient["HumidityLisbon"] = hum
+        ambient["TimeLisbon"] = time
         # ambient.append(time)
         return ambient
     else:
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(readMeteo())
