@@ -37,8 +37,17 @@ NEXT_CHECKLINES = (
     "FROM item "
     "WHERE day_phase_id = %s AND subsystem_id = %s AND "
     "role_id = %s AND seq_order > %s "
-    "ORDER BY seq_order ASC LIMIT 2"
+    "ORDER BY seq_order ASC LIMIT 3"
 )
+
+PRECENDENCE = (
+    "SELECT item_id, after_item_id "
+    "FROM precedence "
+    "INNER JOIN item ON item_id = item.id "
+    "WHERE item_id = %s "
+    "ORDER BY item_id ASC"
+)
+
 app = Flask(__name__)
 
 
@@ -173,6 +182,20 @@ def list_html(system, role):
     )
     nextLines = cursor.fetchall()
     print(f"NEXT_CHECKLINES {nextLines}, len: {len(nextLines)}")
+    missingList = []
+    if len(nextLines) > 0:
+        line2Sign = nextLines[0][0]
+        cursor.close()
+        cursor = conn.cursor()
+        cursor.execute(
+            PRECENDENCE,
+            (line2Sign,),
+        )
+        precendenceLines = cursor.fetchall()
+        for line in precendenceLines:
+            missingList.append(line[1])
+        print(f"precendenceLines: {precendenceLines}, {missingList}")
+
     cursor.close()
     conn.close()
 
@@ -192,7 +215,7 @@ def list_html(system, role):
         </style>
     </head>
     <body>
-        <h1>Esther Checklist Management Shot Id {{shotId}}  {{roleName}} - (MariaDB) </h1>
+        <h1> {{roleName}} Esther Checklist Management. Shot Id {{shotId}} </h1>
         <table>
             <tr>
                 <th>ID</th>
@@ -232,6 +255,7 @@ def list_html(system, role):
             {% endfor %}
         </table>
         <h2>Next Actions</h2>
+        {% if len > 0 %}
         <table>
             <tr>
                 <th>ID</th>
@@ -239,27 +263,37 @@ def list_html(system, role):
                 <th>name</th>
                 <th>Actions</th>
             </tr>
-            {% for line in nextLines %}
             <tr>
-                <td>{{ line[0] }}</td>
-                <td>{{ line[1] }}</td>
-                <td>{{ line[2] }}</td>
+                <td>{{ nextLines[0][0] }}</td>
+                <td>{{ nextLines[0][1] }}</td>
+                <td>{{ nextLines[0][2] }}</td>
                 <td>
-                    <a href="{{ url_for('edit', id=line[0]) }}" class="btn">Edit</a>
-                    <a href="{{ url_for('insert', id=line[0], status=0) }}" class="btn">OK</a>
+                    <a href="{{ url_for('insert', id=nextLines[0][0], status=0) }}" class="btn">OK</a>
+                    <a href="{{ url_for('insert', id=nextLines[0][0], status=1) }}" class="btn">NOK</a>
                 </td>
+            </tr>
+            {% for i in range(1, len) %}
+            <tr>
+                <td>{{ nextLines[i][0] }}</td>
+                <td>{{ nextLines[i][1] }}</td>
+                <td>{{ nextLines[i][2] }}</td>
+                <td></td>
             </tr>
             {% endfor %}
         </table>
+        {% endif %}
     </body>
     </html>
     """
+    # <a href="{{ url_for('edit', id=nextLines[i][0]) }}" class="btn">Edit</a>
+    # {% for line in nextLines %}
     return render_template_string(
         html,
         shotId=lastShotId,
         report=report,
         completed=completed,
         nextLines=nextLines,
+        len=len(nextLines),
         roleName=roleName,
     )
 
