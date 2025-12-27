@@ -4,6 +4,8 @@ from mysql.connector import Error
 
 from config import DB_CONFIG
 
+DAYPHASE = 1  # Only Implemented
+
 LAST_CHECKLINES = (
     "SELECT item_id, item.seq_order, "
     "time_date, "
@@ -25,8 +27,8 @@ LAST_CHECKED = (
     "FROM complete "
     "INNER JOIN item ON complete.item_id = item.id "
     "WHERE complete.shot = %s AND "
-    "item.role_id= %s AND "
-    "item.subsystem_id = %s "
+    "item.subsystem_id = %s AND "
+    "item.role_id= %s "
     "ORDER BY time_date DESC LIMIT 1"
 )
 
@@ -71,19 +73,33 @@ def index():
         <h1>Esther Checklist Management (MariaDB)</h1>
         <table>
             <tr>
+                <th>Role</th>
                 <th>Master List</th>
                 <th>Combustion</th>
                 <th>Vacuum</th>
             </tr>
             <tr>
+                <td>Chief Engineer</td>
                 <td>
-                    <a href="{{ url_for('list_html', system=1) }}" class="btn">Master</a>
+                    <a href="{{ url_for('list_html', system=0, role=0) }}" class="btn">Master</a>
                 </td>
                 <td>
-                    <a href="{{ url_for('list_html', system=2) }}" class="btn">Combustion</a>
+                    <a href="{{ url_for('list_html', system=1, role=0) }}" class="btn">Combustion</a>
                 </td>
                 <td>
-                    <a href="{{ url_for('list_html', system=3) }}" class="btn">Vacuum</a>
+                    <a href="{{ url_for('list_html', system=2, role=0) }}" class="btn">Vacuum</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Researcher</td>
+                <td>
+                    <a href="{{ url_for('list_html', system=0, role=1) }}" class="btn">Master</a>
+                </td>
+                <td>
+                    <a href="{{ url_for('list_html', system=1, role=1) }}" class="btn">Combustion</a>
+                </td>
+                <td>
+                    <a href="{{ url_for('list_html', system=2, role=1) }}" class="btn">Vacuum</a>
                 </td>
             </tr>
         </table>
@@ -93,29 +109,36 @@ def index():
     return render_template_string(html)
 
 
-def index2():
-    html = list_html(1)
-    return html
-
-
-@app.route("/list_html/<int:system>")
-def list_html(system):
+@app.route("/list_html/<int:system>/<int:role>")
+def list_html(system, role):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
     lastShotId = cursor.fetchone()[0]
-    print(f"Last Id: {lastShotId}")
+    print(f"Last Shot Id: {lastShotId}")
     # if lastShot !=0:
     # rsor.fetchone()[0] != 0:
     # cursor.execute("SELECT id, name, email FROM users")  # SELECT query
     # reset cursor
     cursor.close()
     cursor = conn.cursor()
+    cursor.execute("SELECT name FROM role WHERE id = %s", (role,))  # ,
+    #        (role),
+    # )
+    roleName = cursor.fetchone()[0]
+    # print(f"roleName : {role}:{roleName}")
+
+    cursor.close()
+    cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKED,
-        (lastShotId, 0, system),
+        (lastShotId, system, role),
     )
     lastComplete = cursor.fetchone()
+    if lastComplete is None:
+        print("No completed Lines. Returning")
+        return redirect(url_for("index"))
+
     lastLine = lastComplete[0]
     lastOrder = lastComplete[1]
     print(f"Last Line, Order: {lastLine}, {lastOrder}")
@@ -139,20 +162,17 @@ def list_html(system):
 
     cursor.close()
     cursor = conn.cursor()
-    dayPhase = 1
-    role = 0
     cursor.execute(
         NEXT_CHECKLINES,
         (
-            dayPhase,
+            DAYPHASE,
             system,
             role,
             lastOrder,
         ),
     )
     nextLines = cursor.fetchall()
-    print("NEXT_CHECKLINES")
-    print(nextLines)
+    print(f"NEXT_CHECKLINES {nextLines}, len: {len(nextLines)}")
     cursor.close()
     conn.close()
 
@@ -160,7 +180,7 @@ def list_html(system):
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Flask CRUD Example - MariaDB</title>
+        <title>Flask ESTHER Checklist Wen App - MariaDB</title>
         <style>
             body { font-family: Arial; margin: 50px; }
             table { border-collapse: collapse; width: 100%; }
@@ -172,7 +192,7 @@ def list_html(system):
         </style>
     </head>
     <body>
-        <h1>Esther Checklist Management Shot Id {{shotId}} (MariaDB) </h1>
+        <h1>Esther Checklist Management Shot Id {{shotId}}  {{roleName}} - (MariaDB) </h1>
         <table>
             <tr>
                 <th>ID</th>
@@ -226,7 +246,7 @@ def list_html(system):
                 <td>{{ line[2] }}</td>
                 <td>
                     <a href="{{ url_for('edit', id=line[0]) }}" class="btn">Edit</a>
-                    <a href="{{ url_for('edit', id=line[0]) }}" class="btn">OK</a>
+                    <a href="{{ url_for('insert', id=line[0], status=0) }}" class="btn">OK</a>
                 </td>
             </tr>
             {% endfor %}
@@ -235,7 +255,12 @@ def list_html(system):
     </html>
     """
     return render_template_string(
-        html, shotId=lastShotId, report=report, completed=completed, nextLines=nextLines
+        html,
+        shotId=lastShotId,
+        report=report,
+        completed=completed,
+        nextLines=nextLines,
+        roleName=roleName,
     )
 
 
@@ -283,6 +308,27 @@ def edit(id):
     </html>
     """
     return render_template_string(html, user=user)
+
+
+# INS: Update user data
+@app.route("/insert/<int:id>/<int:status>")
+def insert(id, status):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    INSERT_LINE = (
+        "INSERT INTO complete VALUES (NULL, :shot_no, "
+        "current_timestamp(), %s, %s, NULL)"
+    )
+    print(INSERT_LINE % (id, status))
+    # cursor.execute(
+    #     "UPDATE users SET name = %s, email = %s WHERE id = %s",  # UPDATE query
+    #     (name, email, id),
+    # )
+    # conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for("index"))
 
 
 # UPDATE: Update user data
