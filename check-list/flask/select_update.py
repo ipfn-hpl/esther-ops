@@ -155,11 +155,13 @@ def list_html(system, role):
     )
     lastComplete = cursor.fetchone()
     if lastComplete is None:
-        print("No completed items. Returning")
-        return redirect(url_for("index"))
-
-    lastItem = lastComplete[0]
-    lastOrder = lastComplete[1]
+        print("No completed items. ")
+        lastItem = 0
+        lastOrder = 0
+        # return redirect(url_for("index"))
+    else:
+        lastItem = lastComplete[0]
+        lastOrder = lastComplete[1]
     print(f"Last item, Order: {lastItem}, {lastOrder}")
     cursor.close()
     cursor = conn.cursor()
@@ -330,7 +332,7 @@ def list_html(system, role):
         </table>
         {% endif %}
 
-        <h2><a href="{{ url_for('index') }}">Select List</a></h2>
+        <h2>Select Other <a href="{{ url_for('index') }}">List</a></h2>
     </body>
     </html>
     """
