@@ -17,7 +17,7 @@ LAST_CHECKLINES = (
     "INNER JOIN complete_status ON "
     "complete_status_id = complete_status.id "
     "WHERE complete.shot = %s AND "
-    # "CheckLineSigned.SignedBy = :sign_by AND "
+    # "CheckItemSigned.SignedBy = :sign_by AND "
     "item.subsystem_id = %s "
     "ORDER BY time_date DESC LIMIT 5"
 )
@@ -46,6 +46,16 @@ PRECENDENCE = (
     "INNER JOIN item ON item_id = item.id "
     "WHERE item_id = %s "
     "ORDER BY item_id ASC"
+)
+
+MISSING_ITEM = (
+    "SELECT role.short_name, item.id, seq_order, item.name, "
+    "subsystem.name AS System, day_phase.short_name AS Phase "
+    "FROM item "
+    "INNER JOIN subsystem ON subsystem_id = subsystem.id "
+    "INNER JOIN day_phase ON day_phase_id = day_phase.id "
+    "INNER JOIN role ON role_id = role.id "
+    "WHERE item.id =%s"
 )
 
 app = Flask(__name__)
@@ -145,12 +155,12 @@ def list_html(system, role):
     )
     lastComplete = cursor.fetchone()
     if lastComplete is None:
-        print("No completed Lines. Returning")
+        print("No completed items. Returning")
         return redirect(url_for("index"))
 
-    lastLine = lastComplete[0]
+    lastItem = lastComplete[0]
     lastOrder = lastComplete[1]
-    print(f"Last Line, Order: {lastLine}, {lastOrder}")
+    print(f"Last item, Order: {lastItem}, {lastOrder}")
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
@@ -180,21 +190,36 @@ def list_html(system, role):
             lastOrder,
         ),
     )
-    nextLines = cursor.fetchall()
-    print(f"NEXT_CHECKLINES {nextLines}, len: {len(nextLines)}")
-    missingList = []
-    if len(nextLines) > 0:
-        line2Sign = nextLines[0][0]
+    nextItems = cursor.fetchall()
+    print(f"NEXT_CHECKLINES {nextItems}, len: {len(nextItems)}")
+    missingItems = []
+    if len(nextItems) > 0:
+        item2Sign = nextItems[0][0]
         cursor.close()
         cursor = conn.cursor()
         cursor.execute(
             PRECENDENCE,
-            (line2Sign,),
+            (item2Sign,),
         )
-        precendenceLines = cursor.fetchall()
-        for line in precendenceLines:
-            missingList.append(line[1])
-        print(f"precendenceLines: {precendenceLines}, {missingList}")
+        precendenceItems = cursor.fetchall()
+        for item in precendenceItems:
+            befItem = item[1]
+            cursor.execute(
+                "SELECT COUNT(*) FROM complete WHERE shot = %s AND item_id = %s",
+                (
+                    lastShotId,
+                    befItem,
+                ),
+            )
+            if cursor.fetchone()[0] == 0:
+                cursor.close()
+                cursor = conn.cursor()
+                cursor.execute(
+                    MISSING_ITEM,
+                    (befItem,),
+                )
+                missingItems.append(cursor.fetchone())
+        print(f"precendenceItems: {precendenceItems}, missingItems:{missingItems}")
 
     cursor.close()
     conn.close()
@@ -227,9 +252,6 @@ def list_html(system, role):
                 <td>{{ rprt[0] }}</td>
                 <td>{{ rprt[1] }}</td>
                 <td>{{ rprt[2] }}</td>
-                <td>
-                    <a href="{{ url_for('edit', id=rprt[0]) }}" class="btn">Edit</a>
-                </td>
             </tr>
             {% endfor %}
         </table>
@@ -254,8 +276,29 @@ def list_html(system, role):
             </tr>
             {% endfor %}
         </table>
+        {% if lenMissing > 0 %}
+        <h2>Missing Actions</h2>
+        <table>
+            <tr>
+                <th>Resp</th>
+                <th>ID</th>
+                <th>Order</th>
+                <th>Action</th>
+                <th>System</th>
+            </tr>
+            {% for item in missingItems %}
+            <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+                <td>{{ item[3] }}</td>
+                <td>{{ item[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
         <h2>Next Actions</h2>
-        {% if len > 0 %}
+        {% if lenNext > 0 %}
         <table>
             <tr>
                 <th>ID</th>
@@ -264,36 +307,44 @@ def list_html(system, role):
                 <th>Actions</th>
             </tr>
             <tr>
-                <td>{{ nextLines[0][0] }}</td>
-                <td>{{ nextLines[0][1] }}</td>
-                <td>{{ nextLines[0][2] }}</td>
+                <td>{{ nextItems[0][0] }}</td>
+                <td>{{ nextItems[0][1] }}</td>
+                <td>{{ nextItems[0][2] }}</td>
+                {% if lenMissing == 0 %}
                 <td>
-                    <a href="{{ url_for('insert', id=nextLines[0][0], status=0) }}" class="btn">OK</a>
-                    <a href="{{ url_for('insert', id=nextLines[0][0], status=1) }}" class="btn">NOK</a>
+                    <a href="{{ url_for('insert', shot_id=shotId, id=nextItems[0][0], status=0) }}" class="btn">OK</a>
                 </td>
+                <td>
+                    <a href="{{ url_for('insert', shot_id=shotId, id=nextItems[0][0], status=1) }}" class="btn">NOK</a>
+                </td>
+                {% endif %}
             </tr>
-            {% for i in range(1, len) %}
+            {% for i in range(1, lenNext) %}
             <tr>
-                <td>{{ nextLines[i][0] }}</td>
-                <td>{{ nextLines[i][1] }}</td>
-                <td>{{ nextLines[i][2] }}</td>
+                <td>{{ nextItems[i][0] }}</td>
+                <td>{{ nextItems[i][1] }}</td>
+                <td>{{ nextItems[i][2] }}</td>
                 <td></td>
             </tr>
             {% endfor %}
         </table>
         {% endif %}
+
+        <h2><a href="{{ url_for('index') }}">Select List</a></h2>
     </body>
     </html>
     """
-    # <a href="{{ url_for('edit', id=nextLines[i][0]) }}" class="btn">Edit</a>
-    # {% for line in nextLines %}
+    # <a href="{{ url_for('edit', id=nextItems[i][0]) }}" class="btn">Edit</a>
+    # {% for line in nextItems %}
     return render_template_string(
         html,
         shotId=lastShotId,
         report=report,
         completed=completed,
-        nextLines=nextLines,
-        len=len(nextLines),
+        missingItems=missingItems,
+        lenMissing=len(missingItems),
+        nextItems=nextItems,
+        lenNext=len(nextItems),
         roleName=roleName,
     )
 
@@ -345,24 +396,38 @@ def edit(id):
 
 
 # INS: Update user data
-@app.route("/insert/<int:id>/<int:status>")
-def insert(id, status):
+@app.route("/insert/<int:shot_id>/<int:id>/<int:status>")
+def insert(shot_id, id, status):
     conn = get_db_connection()
     cursor = conn.cursor()
     INSERT_LINE = (
-        "INSERT INTO complete VALUES (NULL, :shot_no, "
-        "current_timestamp(), %s, %s, NULL)"
+        "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
     )
-    print(INSERT_LINE % (id, status))
-    # cursor.execute(
+    cursor.execute(
+        INSERT_LINE,
+        (
+            shot_id,
+            id,
+            status,
+        ),
+    )
+    # Get Item insertted
+    print(INSERT_LINE % (shot_id, id, status))
+    cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (id,))
+    item = cursor.fetchone()
+    system = item[0]
+    role = item[1]
+    print(f"System: {system}, Role: {role}")
+
     #     "UPDATE users SET name = %s, email = %s WHERE id = %s",  # UPDATE query
     #     (name, email, id),
     # )
-    # conn.commit()
+    conn.commit()
     cursor.close()
     conn.close()
 
-    return redirect(url_for("index"))
+    # return redirect(url_for("index"))
+    return redirect(url_for("list_html", system=system, role=role))
 
 
 # UPDATE: Update user data
