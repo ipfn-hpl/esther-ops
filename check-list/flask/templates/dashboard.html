@@ -1,50 +1,50 @@
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Flask CRUD Example - MariaDB</title>
-        <style>
-            body { font-family: Arial; margin: 50px; }
-            table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #4CAF50; color: white; }
-            .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
-                   background-color: #008CBA; color: white; border-radius: 3px; }
-            .btn:hover { background-color: #005f7a; }
-        </style>
-    </head>
-    <body>
-        <h1>Esther Checklist Management (MariaDB)</h1>
-        <table>
-            <tr>
-                <th>Role</th>
-                <th>Master List</th>
-                <th>Combustion</th>
-                <th>Vacuum</th>
-            </tr>
-            <tr>
-                <td>Chief Engineer</td>
-                <td>
-                    <a href="{{ url_for('list_html', system=0, role=0) }}" class="btn">Master</a>
-                </td>
-                <td>
-                    <a href="{{ url_for('list_html', system=1, role=0) }}" class="btn">Combustion</a>
-                </td>
-                <td>
-                    <a href="{{ url_for('list_html', system=2, role=0) }}" class="btn">Vacuum</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Researcher</td>
-                <td>
-                    <a href="{{ url_for('list_html', system=0, role=1) }}" class="btn">Master</a>
-                </td>
-                <td>
-                    <a href="{{ url_for('list_html', system=1, role=1) }}" class="btn">Combustion</a>
-                </td>
-                <td>
-                    <a href="{{ url_for('list_html', system=2, role=1) }}" class="btn">Vacuum</a>
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask CRUD Example - MariaDB</title>
+    <style>
+    body { font-family: Arial; margin: 50px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+    background-color: #008CBA; color: white; border-radius: 3px; }
+    .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1>Esther Checklist Management (MariaDB)</h1>
+    <table>
+      <tr>
+        <th>Role</th>
+        <th>Master List</th>
+        <th>Combustion</th>
+        <th>Vacuum</th>
+      </tr>
+      <tr>
+        <td>Chief Engineer</td>
+        <td>
+          <a href="{{ url_for('list_html', system=0, role=0) }}" class="btn">Master</a>
+        </td>
+        <td>
+          <a href="{{ url_for('list_html', system=1, role=0) }}" class="btn">Combustion</a>
+        </td>
+        <td>
+          <a href="{{ url_for('list_html', system=2, role=0) }}" class="btn">Vacuum</a>
+        </td>
+      </tr>
+      <tr>
+        <td>Researcher</td>
+        <td>
+          <a href="{{ url_for('list_html', system=0, role=1) }}" class="btn">Master</a>
+        </td>
+        <td>
+          <a href="{{ url_for('list_html', system=1, role=1) }}" class="btn">Combustion</a>
+        </td>
+        <td>
+          <a href="{{ url_for('list_html', system=2, role=1) }}" class="btn">Vacuum</a>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

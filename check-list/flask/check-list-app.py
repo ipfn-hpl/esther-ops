@@ -147,7 +147,6 @@ def login():
                 flash("Invalid username or password!")
         finally:
             cursor.close()
-            # conn.close()
 
     return """
         <form method="post">
@@ -256,7 +255,6 @@ def list_html(system, role):
         print(f"precendenceItems: {precendenceItems}, missingItems:{missingItems}")
 
     cursor.close()
-    # conn.close()
 
     # <a href="{{ url_for('edit', id=nextItems[i][0]) }}" class="btn">Edit</a>
     # {% for line in nextItems %}
@@ -284,7 +282,6 @@ def edit(id):
     )  # SELECT with WHERE
     user = cursor.fetchone()
     cursor.close()
-    # conn.close()
 
     html = """
     <!DOCTYPE html>
@@ -321,32 +318,32 @@ def edit(id):
 
 
 # INS: Update user data
-@app.route("/attention/<int:shot_id>/<int:id>/<int:status>")
-def attention(shot_id, id, status):
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Edit User</title>
-        <style>
-            body { font-family: Arial; margin: 50px; }
-            input { padding: 8px; margin: 5px 0; width: 300px; }
-            .btn { padding: 10px 20px; background-color: #4CAF50; 
-                   color: white; border: none; cursor: pointer; }
-            .btn:hover { background-color: #45a049; }
-        </style>
-    </head>
-    <body>
-        <h1>Edit User</h1>
-    </body>
-    </html>
-    """
-    return render_template_string(html, user=user)
+@app.route("/attention/<int:shot_id>/<int:item_id>")
+def attention(shot_id, item_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT subsystem_id,role_id,name FROM item WHERE id = ?",
+        (item_id,),
+    )
+    item = cursor.fetchone()
+    system_id = item[0]
+    role_id = item[1]
+    name = item[2]
+    print(f"System: {system_id}, Role: {role_id}")
+    return render_template(
+        "attention.html",
+        name=name,
+        shot_id=shot_id,
+        item_id=item_id,
+        system_id=system_id,
+        role_id=role_id,
+    )
 
 
 # INS: Update user data
-@app.route("/insert/<int:shot_id>/<int:id>/<int:status>")
-def insert(shot_id, id, status):
+@app.route("/insert/<int:shot_id>/<int:item_id>/<int:status>")
+def insert(shot_id, item_id, status):
     # conn = get_db_connection()
     conn = get_db()
     cursor = conn.cursor()
@@ -357,13 +354,16 @@ def insert(shot_id, id, status):
         INSERT_LINE,
         (
             shot_id,
-            id,
+            item_id,
             status,
         ),
     )
     # Get Item insertted
-    print(INSERT_LINE % (shot_id, id, status))
-    cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (id,))
+    print(
+        "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
+        % (shot_id, item_id, status)
+    )
+    cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (item_id,))
     item = cursor.fetchone()
     system = item[0]
     role = item[1]
@@ -374,7 +374,6 @@ def insert(shot_id, id, status):
     # )
     conn.commit()
     cursor.close()
-    # conn.close()
 
     # return redirect(url_for("index"))
     return redirect(url_for("list_html", system=system, role=role))
@@ -395,7 +394,6 @@ def update(id):
     )
     conn.commit()
     cursor.close()
-    # conn.close()
 
     return redirect(url_for("dashboard"))
 
