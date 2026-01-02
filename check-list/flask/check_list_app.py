@@ -1,6 +1,5 @@
 from flask import (
     Flask,
-    render_template_string,
     render_template,
     request,
     redirect,
@@ -9,17 +8,19 @@ from flask import (
     flash,
     g,
 )
-from werkzeug.security import check_password_hash  # generate_password_hash,
 
-# import mysql.connector
+#    render_template_string,
+from werkzeug.security import check_password_hash  # generate_password_hash,
+from functools import wraps
+
 import mariadb
 import sys
 import os
-# from mysql.connector import Error
 
+# import Secrets
 from config import DB_CONFIG
 
-DAYPHASE = 1  # Only Implemented
+DAYPHASE = 1  # Only this phase Implemented
 
 LAST_CHECKLINES = (
     "SELECT item_id, item.seq_order, "
@@ -89,6 +90,18 @@ def get_db():
     return g.db
 
 
+# Login required decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please login to access this page.")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 @app.teardown_appcontext
 def close_db(error):
     """Close database connection at the end of request"""
@@ -102,9 +115,12 @@ def close_db(error):
 def home():
     if "user_id" in session:
         # return f'Welcome to Esther CheckLists. Please Login {session["username"]}! <a href="/logout">Logout</a>'
+
         flash(f"Welcome to Esther CheckLists. {session['username']}!")
-        return redirect(url_for("dashboard"))
-    return 'Welcome! <a href="/login">Login</a> | <a href="/register">Register</a>'
+        return f'Welcome to Esther CheckLists, {session["username"]}! <a href="/dashboard">Dashboard</a> | <a href="/logout">Logout</a>'
+        # return redirect(url_for("dashboard"))
+    return 'Welcome to ESTHER! Please <a href="/login">Login</a>'
+    # return 'Welcome! <a href="/login">Login</a> | <a href="/register">Register</a>'
 
 
 # Logout route
@@ -157,12 +173,15 @@ def login():
     """
 
 
+# Protected dashboard route
 @app.route("/dashboard")
+@login_required
 def dashboard():
     return render_template("dashboard.html")
 
 
 @app.route("/list_html/<int:system>/<int:role>")
+@login_required
 def list_html(system, role):
     # conn = get_db_connection()
     conn = get_db()
@@ -270,54 +289,9 @@ def list_html(system, role):
     )
 
 
-# SELECT: Get single user for editing
-@app.route("/edit/<int:id>")
-def edit(id):
-    # conn = get_db_connection()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, name, email FROM users WHERE id = ?", (id,)
-    )  # SELECT with WHERE
-    user = cursor.fetchone()
-    cursor.close()
-
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Edit User</title>
-        <style>
-            body { font-family: Arial; margin: 50px; }
-            input { padding: 8px; margin: 5px 0; width: 300px; }
-            .btn { padding: 10px 20px; background-color: #4CAF50; 
-                   color: white; border: none; cursor: pointer; }
-            .btn:hover { background-color: #45a049; }
-        </style>
-    </head>
-    <body>
-        <h1>Edit User</h1>
-        <form method="POST" action="{{ url_for('update', id=user[0]) }}">
-            <div>
-                <label>Name:</label><br>
-                <input type="text" name="name" value="{{ user[1] }}" required>
-            </div>
-            <div>
-                <label>Email:</label><br>
-                <input type="email" name="email" value="{{ user[2] }}" required>
-            </div>
-            <br>
-            <button type="submit" class="btn">Update</button>
-            <a href="{{ url_for('dashboard') }}">Cancel</a>
-        </form>
-    </body>
-    </html>
-    """
-    return render_template_string(html, user=user)
-
-
-# INS: Update user data
+# I
 @app.route("/attention/<int:shot_id>/<int:item_id>")
+@login_required
 def attention(shot_id, item_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -340,8 +314,9 @@ def attention(shot_id, item_id):
     )
 
 
-# INS: Update user data
+# INSERT: Complete Action Status
 @app.route("/insert/<int:shot_id>/<int:item_id>/<int:status>")
+@login_required
 def insert(shot_id, item_id, status):
     # conn = get_db_connection()
     conn = get_db()
@@ -368,33 +343,11 @@ def insert(shot_id, item_id, status):
     role = item[1]
     print(f"System: {system}, Role: {role}")
 
-    #     "UPDATE users SET name = %s, email = %s WHERE id = %s",  # UPDATE query
-    #     (name, email, id),
-    # )
     conn.commit()
     cursor.close()
 
     # return redirect(url_for("index"))
     return redirect(url_for("list_html", system=system, role=role))
-
-
-# UPDATE: Update user data
-@app.route("/update/<int:id>", methods=["POST"])
-def update(id):
-    name = request.form["name"]
-    email = request.form["email"]
-
-    # conn = get_db_connection()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE users SET name = %s, email = %s WHERE id = %s",  # UPDATE query
-        (name, email, id),
-    )
-    conn.commit()
-    cursor.close()
-
-    return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":
