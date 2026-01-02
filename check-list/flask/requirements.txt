@@ -1,2 +1,6 @@
 flask 
-mysql-connector-python
+flask_login 
+werkzeug
+mariadb
+# mysql-connector-python
+
