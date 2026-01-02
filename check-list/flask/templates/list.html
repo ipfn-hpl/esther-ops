@@ -1,0 +1,108 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Flask ESTHER Checklist Web App - MariaDB</title>
+        <style>
+            body { font-family: Arial; margin: 50px; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #4CAF50; color: white; }
+            .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+                   background-color: #008CBA; color: white; border-radius: 3px; }
+            .btn:hover { background-color: #005f7a; }
+        </style>
+    </head>
+    <body>
+        <h1> {{roleName}} Esther Checklist Management. Shot Id {{shotId}} </h1>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Shot</th>
+                <th>Actions</th>
+            </tr>
+            {% for rprt in report %}
+            <tr>
+                <td>{{ rprt[0] }}</td>
+                <td>{{ rprt[1] }}</td>
+                <td>{{ rprt[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h2>Completed Actions in Shot {{shotId}}</h2>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Order</th>
+                <th>Date/Time</th>
+                <th>Resp</th>
+                <th>name</th>
+                <th>Status</th>
+            </tr>
+            {% for action in completed %}
+            <tr>
+                <td>{{ action[0] }}</td>
+                <td>{{ action[1] }}</td>
+                <td>{{ action[2] }}</td>
+                <td>{{ action[3] }}</td>
+                <td>{{ action[5] }}</td>
+                <td>{{ action[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% if lenMissing > 0 %}
+        <h2>Missing Actions</h2>
+        <table>
+            <tr>
+                <th>Resp</th>
+                <th>ID</th>
+                <th>Order</th>
+                <th>Action</th>
+                <th>System</th>
+            </tr>
+            {% for item in missingItems %}
+            <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+                <td>{{ item[3] }}</td>
+                <td>{{ item[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        <h2>Next Actions</h2>
+        {% if lenNext > 0 %}
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Order</th>
+                <th>name</th>
+                <th>Actions</th>
+            </tr>
+            <tr>
+                <td>{{ nextItems[0][0] }}</td>
+                <td>{{ nextItems[0][1] }}</td>
+                <td>{{ nextItems[0][2] }}</td>
+                {% if lenMissing == 0 %}
+                <td>
+                    <a href="{{ url_for('insert', shot_id=shotId, id=nextItems[0][0], status=0) }}" class="btn">OK</a>
+                </td>
+                <td>
+                    <a href="{{ url_for('insert', shot_id=shotId, id=nextItems[0][0], status=1) }}" class="btn">NOK</a>
+                </td>
+                {% endif %}
+            </tr>
+            {% for i in range(1, lenNext) %}
+            <tr>
+                <td>{{ nextItems[i][0] }}</td>
+                <td>{{ nextItems[i][1] }}</td>
+                <td>{{ nextItems[i][2] }}</td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+
+        <h2>Select Other <a href="{{ url_for('dashboard') }}">List</a></h2>
+    </body>
+    </html>
