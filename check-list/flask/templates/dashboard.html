@@ -14,6 +14,7 @@
   </head>
   <body>
     <h1>Esther Checklist Management (MariaDB)</h1>
+    <h2> Shot Id: {{shotId}} </h2>
     <table>
       <tr>
         <th>Role</th>
@@ -24,25 +25,25 @@
       <tr>
         <td>Chief Engineer</td>
         <td>
-          <a href="{{ url_for('list_html', system=0, role=0) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', system=0, role=0, shot=shotId) }}" class="btn">Master</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=1, role=0) }}" class="btn">Combustion</a>
+          <a href="{{ url_for('list_html', system=1, role=0, shot=shotId) }}" class="btn">Combustion</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=2, role=0) }}" class="btn">Vacuum</a>
+          <a href="{{ url_for('list_html', system=2, role=0, shot=shotId) }}" class="btn">Vacuum</a>
         </td>
       </tr>
       <tr>
         <td>Researcher</td>
         <td>
-          <a href="{{ url_for('list_html', system=0, role=1) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', system=0, role=1, shot=shotId) }}" class="btn">Master</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=1, role=1) }}" class="btn">Combustion</a>
+          <a href="{{ url_for('list_html', system=1, role=1, shot=shotId) }}" class="btn">Combustion</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=2, role=1) }}" class="btn">Vacuum</a>
+          <a href="{{ url_for('list_html', system=2, role=1, shot=shotId) }}" class="btn">Vacuum</a>
         </td>
       </tr>
     </table>

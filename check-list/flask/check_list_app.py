@@ -12,17 +12,22 @@ from flask import (
 #    render_template_string,
 from werkzeug.security import check_password_hash  # generate_password_hash,
 from functools import wraps
-
+from datetime import timedelta
 import mariadb
 import sys
-import os
+# import os
 
 # import Secrets
 from config import DB_CONFIG
+# from werkzeug.security import  generate_password_hash
+# hashed_password = generate_password_hash("xxxx", method="pbkdf2:sha256")
+# print(hashed_password)
 
 DAYPHASE = 1  # Only this phase Implemented
 
+# Reverse Order
 LAST_CHECKLINES = (
+    "SELECT * FROM ("
     "SELECT item_id, item.seq_order, "
     "time_date, "
     "role.short_name AS Resp, complete_status.status, "
@@ -36,6 +41,7 @@ LAST_CHECKLINES = (
     # "CheckItemSigned.SignedBy = :sign_by AND "
     "item.subsystem_id = ? "
     "ORDER BY time_date DESC LIMIT 5"
+    ") as myAlias ORDER BY time_date ASC"
 )
 
 LAST_CHECKED = (
@@ -76,7 +82,12 @@ MISSING_ITEM = (
 
 app = Flask(__name__)
 # app.secret_key = "your-secret-key-random"  # Change this to a random secret key
-app.secret_key = os.urandom(24)
+# app.secret_key = os.urandom(24)
+app.secret_key = (
+    b"4\xaf\xa4\x05\xc9\xcdQ\x17\x86Q\xb5\x17m\x02\x07\x97b\xcd\xc8s\xdd\x1e\xc3j"
+)
+# print(f"app.secrte: {app.secret_key}")
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)
 
 
 def get_db():
@@ -175,23 +186,37 @@ def login():
 
 # Protected dashboard route
 @app.route("/dashboard")
+@app.route("/dashboard/<int:shot>")
 @login_required
-def dashboard():
-    return render_template("dashboard.html")
+def dashboard(shot=None):
+    if shot is None:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
+        shotId = cursor.fetchone()[0]
+        cursor.close()
+    else:
+        shotId = shot
+    return render_template("dashboard.html", shotId=shotId)
 
 
 @app.route("/list_html/<int:system>/<int:role>")
+@app.route("/list_html/<int:system>/<int:role>/<int:shot>")
 @login_required
-def list_html(system, role):
+def list_html(system, role, shot=None):
     # conn = get_db_connection()
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
-    lastShotId = cursor.fetchone()[0]
-    print(f"Last Shot Id: {lastShotId}")
+    if shot is None:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
+        ShotId = cursor.fetchone()[0]
+        cursor.close()
+    else:
+        ShotId = shot
+
+    print(f"Last Shot Id: {ShotId}")
     # if lastShot !=0:
     # reset cursor
-    cursor.close()
     cursor = conn.cursor()
     cursor.execute("SELECT name FROM role WHERE id = ?", (role,))  # ,
     roleName = cursor.fetchone()[0]
@@ -201,7 +226,7 @@ def list_html(system, role):
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKED,
-        (lastShotId, system, role),
+        (ShotId, system, role),
     )
     lastComplete = cursor.fetchone()
     if lastComplete is None:
@@ -217,7 +242,7 @@ def list_html(system, role):
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports WHERE id = ?",
-        (lastShotId,),
+        (ShotId,),
     )
     report = cursor.fetchall()
     cursor.close()
@@ -225,7 +250,7 @@ def list_html(system, role):
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKLINES,
-        (lastShotId, system),
+        (ShotId, system),
     )
     completed = cursor.fetchall()
     # print("Completed")
@@ -258,7 +283,7 @@ def list_html(system, role):
             cursor.execute(
                 "SELECT COUNT(*) FROM complete WHERE shot = ? AND item_id = ?",
                 (
-                    lastShotId,
+                    ShotId,
                     befItem,
                 ),
             )
@@ -278,7 +303,7 @@ def list_html(system, role):
     # {% for line in nextItems %}
     return render_template(
         "list.html",
-        shotId=lastShotId,
+        shotId=ShotId,
         report=report,
         completed=completed,
         missingItems=missingItems,
@@ -332,7 +357,7 @@ def insert(shot_id, item_id, status):
             status,
         ),
     )
-    # Get Item insertted
+    # Get Item inserted
     print(
         "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
         % (shot_id, item_id, status)
@@ -346,8 +371,8 @@ def insert(shot_id, item_id, status):
     conn.commit()
     cursor.close()
 
-    # return redirect(url_for("index"))
     return redirect(url_for("list_html", system=system, role=role))
+    # return redirect(url_for("list_html", system=system, role=role, shot=shotId))
 
 
 if __name__ == "__main__":
