@@ -11,32 +11,32 @@
     </style>
   </head>
   <body>
-    <h1>Attention on Action:</h1>
-    <p>{{ name }} </p>
+    <h1>Attention Panel on Action:</h1>
+    <h2>"{{ name }}"</h2>
     <h3>Choose Completion Status</h3>
     <table>
       <tr>
         <th>Status</th>
       </tr>
-      <tr>&nbsp;</tr>
+      <tr><td>&nbsp;</td></tr>
       <tr>
         <td>
           <a href="{{ url_for('insert', shot_id=shot_id, item_id=item_id, status=2) }}" class="btn">Urgent Repair</a>
         </td>
       </tr>
-      <tr>&nbsp;</tr>
+      <tr><td>&nbsp;</td></tr>
       <tr>
         <td>
           <a href="{{ url_for('insert', shot_id=shot_id, item_id=item_id, status=3) }}" class="btn">NOT Completed</a>
         </td>
       </tr>
-      <tr>&nbsp;</tr>
+      <tr><td>&nbsp;</td></tr>
       <tr>
         <td>
           <a href="{{ url_for('insert', shot_id=shot_id, item_id=item_id, status=4) }}" class="btn">NOT Applicable</a>
         </td>
       </tr>
-      <tr>&nbsp;</tr>
+      <tr><td>&nbsp;</td></tr>
       <tr>
         <td>
           <a href="{{ url_for('insert', shot_id=shot_id, item_id=item_id, status=255) }}" class="btn">ABORT ALL PROCEDURES!</a>

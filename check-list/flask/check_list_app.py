@@ -80,6 +80,19 @@ MISSING_ITEM = (
     "WHERE item.id = ?"
 )
 
+CHECKLIST_FULL = (
+    "SELECT item_id, item.seq_order, "
+    "time_date, item.name, "
+    "role.short_name AS Resp, complete_status.short_status "
+    "FROM complete "
+    "INNER JOIN item ON item_id = item.id "
+    "INNER JOIN role ON item.role_id = role.id "
+    "INNER JOIN complete_status ON "
+    "complete_status_id = complete_status.id "
+    "WHERE complete.shot = ? "
+    "ORDER BY time_date ASC"
+)
+
 app = Flask(__name__)
 # app.secret_key = "your-secret-key-random"  # Change this to a random secret key
 # app.secret_key = os.urandom(24)
@@ -130,8 +143,57 @@ def home():
         flash(f"Welcome to Esther CheckLists. {session['username']}!")
         return f'Welcome to Esther CheckLists, {session["username"]}! <a href="/dashboard">Dashboard</a> | <a href="/logout">Logout</a>'
         # return redirect(url_for("dashboard"))
-    return 'Welcome to ESTHER! Please <a href="/login">Login</a>'
+    # return 'Welcome to ESTHER! Please <a href="/login">Login</a>'
     # return 'Welcome! <a href="/login">Login</a> | <a href="/register">Register</a>'
+
+    return """
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Checklist App - MariaDB</title>
+    <style>
+    body { font-family: Arial; margin: 50px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+    background-color: #008CBA; color: white; border-radius: 3px; }
+                .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther Checklist Management. </h1>
+    <p>Welcome to ESTHER! Please <a href="/login">Login</a></p>
+    <p>Show last Shot <a href="/report">Report</a></p>
+    <p>(to get report for orher shot, add "/shotNumber" to the end of the <a href="/report">Link</a>)</p>
+  </body>
+</html>
+    """
+
+
+@app.route("/report")
+@app.route("/report/<int:shot>")
+def report(shot=None):
+    conn = get_db()
+    if shot is None:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
+        shotId = cursor.fetchone()[0]
+        cursor.close()
+    else:
+        shotId = shot
+
+    cursor = conn.cursor()
+    cursor.execute(
+        CHECKLIST_FULL,
+        (shotId,),
+    )
+    completed = cursor.fetchall()
+    return render_template(
+        "report.html",
+        shotId=shotId,
+        completed=completed,
+    )
 
 
 # Logout route

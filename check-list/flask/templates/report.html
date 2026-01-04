@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Checklist Final Report App - MariaDB</title>
+    <style>
+body { font-family: Arial; margin: 50px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #4CAF50; color: white; }
+.btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+  background-color: #008CBA; color: white; border-radius: 3px; }
+            .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther Checklist Management. Shot Id {{shotId}} </h1>
+    <h2>Completed Actions in Shot {{shotId}}</h2>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Order</th>
+        <th>Date/Time</th>
+        <th>Action</th>
+        <th>Status</th>
+        <th>Resp</th>
+      </tr>
+      {% for action in completed %}
+      <tr>
+        <td>{{ action[0] }}</td>
+        <td>{{ action[1] }}</td>
+        <td>{{ action[2] }}</td>
+        <td>{{ action[3] }}</td>
+        <td>{{ action[5] }}</td>
+        <td>{{ action[4] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h2>Select Other <a href="{{ url_for('dashboard', shot=shotId) }}">List</a></h2>
+    <h3> <a href="/logout">Logout</a></h3>
+  </body>
+</html>
