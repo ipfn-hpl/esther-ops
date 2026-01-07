@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Checklist Web App - MariaDB</title>
+    <style>
+body { font-family: Arial; margin: 50px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #4CAF50; color: white; }
+.btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+  background-color: #008CBA; color: white; border-radius: 3px; }
+            .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther {{system_list[0][4]}} Checklist Phase: {{phase}} </h1>
+    <h2>Actions</h2>
+    {% if lenList > 0 %}
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Order</th>
+        <th>Action</th>
+        <th>Respons.</th>
+      </tr>
+      {% for i in range(0, lenList) %}
+      <tr>
+        <td>{{ system_list[i][0] }}</td>
+        <td>{{ system_list[i][1] }}</td>
+        <td>{{ system_list[i][2] }}</td>
+        <td>{{ system_list[i][3] }}</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+  </body>
+</html>

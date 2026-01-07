@@ -26,6 +26,16 @@ from config import DB_CONFIG
 DAYPHASE = 1  # Only this phase Implemented
 
 # Reverse Order
+SYSTEM_CHECKLIST = (
+    "SELECT item.id, item.seq_order, item.name, role.short_name, "
+    "subsystem.name "
+    "FROM item "
+    "INNER JOIN role ON role_id=role.id "
+    "INNER JOIN subsystem ON subsystem_id=subsystem.id "
+    "WHERE day_phase_id=? AND subsystem_id=? "
+    "ORDER BY seq_order ASC"
+)
+
 LAST_CHECKLINES = (
     "SELECT * FROM ("
     "SELECT item_id, item.seq_order, "
@@ -80,7 +90,7 @@ MISSING_ITEM = (
     "WHERE item.id = ?"
 )
 
-CHECKLIST_FULL = (
+REPORT_FULL = (
     "SELECT item_id, item.seq_order, "
     "time_date, item.name, "
     "role.short_name AS Resp, complete_status.short_status "
@@ -185,7 +195,7 @@ def report(shot=None):
 
     cursor = conn.cursor()
     cursor.execute(
-        CHECKLIST_FULL,
+        REPORT_FULL,
         (shotId,),
     )
     completed = cursor.fetchall()
@@ -251,8 +261,8 @@ def login():
 @app.route("/dashboard/<int:shot>")
 @login_required
 def dashboard(shot=None):
+    conn = get_db()
     if shot is None:
-        conn = get_db()
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
         shotId = cursor.fetchone()[0]
@@ -260,6 +270,27 @@ def dashboard(shot=None):
     else:
         shotId = shot
     return render_template("dashboard.html", shotId=shotId)
+
+
+@app.route("/system_list/<int:phase>/<int:system>")
+def system_list(
+    phase,
+    system,
+):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        SYSTEM_CHECKLIST,
+        (phase, system),
+    )
+    system_list = cursor.fetchall()
+    return render_template(
+        "system_list.html",
+        phase=phase,
+        system=system,
+        system_list=system_list,
+        lenList=len(system_list),
+    )
 
 
 @app.route("/list_html/<int:system>/<int:role>")
