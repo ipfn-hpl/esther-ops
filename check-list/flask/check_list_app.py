@@ -110,7 +110,7 @@ app.secret_key = (
     b"4\xaf\xa4\x05\xc9\xcdQ\x17\x86Q\xb5\x17m\x02\x07\x97b\xcd\xc8s\xdd\x1e\xc3j"
 )
 # print(f"app.secrte: {app.secret_key}")
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=60)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=120)
 
 
 def get_db():
@@ -395,7 +395,7 @@ def list_html(system, role, shot=None):
     # <a href="{{ url_for('edit', id=nextItems[i][0]) }}" class="btn">Edit</a>
     # {% for line in nextItems %}
     return render_template(
-        "list.html",
+        "check_list.html",
         shotId=ShotId,
         report=report,
         completed=completed,

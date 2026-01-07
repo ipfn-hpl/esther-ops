@@ -11,6 +11,7 @@ th { background-color: #4CAF50; color: white; }
   background-color: #008CBA; color: white; border-radius: 3px; }
             .btn:hover { background-color: #005f7a; }
     </style>
+    <meta http-equiv="refresh" content="5">
   </head>
   <body>
     <h1> {{roleName}} Esther Checklist Management. Shot Id {{shotId}} </h1>
@@ -28,6 +29,7 @@ th { background-color: #4CAF50; color: white; }
       </tr>
       {% endfor %}
     </table>
+<hr style="height: 3px; background-color: gray; width:98%;">
     <h2>Completed Actions in Shot {{shotId}}</h2>
     <table>
       <tr>
@@ -49,6 +51,7 @@ th { background-color: #4CAF50; color: white; }
       </tr>
       {% endfor %}
     </table>
+<hr style="height: 3px; background-color: gray; width:98%;">
     {% if lenMissing > 0 %}
     <h2>Missing Actions</h2>
     <table>
@@ -69,6 +72,7 @@ th { background-color: #4CAF50; color: white; }
       </tr>
       {% endfor %}
     </table>
+<hr style="height: 3px; background-color: gray; width:98%;">
     {% endif %}
     <h2>Next Actions</h2>
     {% if lenNext > 0 %}
@@ -105,7 +109,8 @@ th { background-color: #4CAF50; color: white; }
       {% endfor %}
     </table>
     {% endif %}
-
+<hr style="height: 3px; background-color: gray; width:98%;">
+    <button onClick="window.location.reload();">Refresh Tables</button>
     <h2>Select Other <a href="{{ url_for('dashboard', shot=shotId) }}">List</a></h2>
     <h3> <a href="/logout">Logout</a></h3>
   </body>

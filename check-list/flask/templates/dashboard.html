@@ -15,12 +15,14 @@
   <body>
     <h1>Esther Checklist Management (MariaDB)</h1>
     <h2> Shot Id: {{shotId}} </h2>
+    <h2> Checklist Signing Tables</h2>
     <table>
       <tr>
         <th>Role</th>
         <th>Master List</th>
         <th>Combustion</th>
         <th>Vacuum</th>
+        <th>TEST GASES</th>
       </tr>
       <tr>
         <td>Chief Engineer</td>
@@ -32,6 +34,9 @@
         </td>
         <td>
           <a href="{{ url_for('list_html', system=2, role=0, shot=shotId) }}" class="btn">Vacuum</a>
+        </td>
+        <td>
+          <a href="{{ url_for('list_html', system=3, role=0, shot=shotId) }}" class="btn">TEST GASES</a>
         </td>
       </tr>
       <tr>
@@ -45,9 +50,12 @@
         <td>
           <a href="{{ url_for('list_html', system=2, role=1, shot=shotId) }}" class="btn">Vacuum</a>
         </td>
+        <td>
+          <a href="{{ url_for('list_html', system=3, role=1, shot=shotId) }}" class="btn">TEST GASES</a>
+        </td>
       </tr>
     </table>
-    <h2> System Lists </h2>
+    <h2> General System Lists</h2>
     <table>
       <tr>
         <th>Phase</th>
@@ -57,16 +65,23 @@
       </tr>
       <tr>
         <td>Start of Day</td>
-        <td><a href="{{ url_for('system_list', phase=0, system=0) }}" class="btn">List</a></td>
-        <td><a href="{{ url_for('system_list', phase=0, system=1) }}" class="btn">List</a></td>
-        <td><a href="{{ url_for('system_list', phase=0, system=2) }}" class="btn">List</a></td>
+        <td><a href="{{ url_for('system_list', phase=0, system=0) }}" class="btn" target="_blank">List</a></td>
+        <td></td>
+        <td></td>
       </tr>
       <tr>
         <td>Shot</td>
-        <td><a href="{{ url_for('system_list', phase=1, system=0) }}" class="btn">List</a></td>
-        <td><a href="{{ url_for('system_list', phase=1, system=1) }}" class="btn">List</a></td>
-        <td><a href="{{ url_for('system_list', phase=1, system=2) }}" class="btn">List</a></td>
+        <td><a href="{{ url_for('system_list', phase=1, system=0) }}" class="btn" target="_blank">List</a></td>
+        <td><a href="{{ url_for('system_list', phase=1, system=1) }}" class="btn" target="_blank">List</a></td>
+        <td><a href="{{ url_for('system_list', phase=1, system=2) }}" class="btn" target="_blank">List</a></td>
       </tr>
+      <tr>
+        <td>End of the Experimental Run</td>
+        <td><a href="{{ url_for('system_list', phase=2, system=0) }}" class="btn" target="_blank">List</a></td>
+        <td></td>
+        <td></td>
+      </tr>
+      
     </table>
     <h3> <a href="/logout">Logout</a></h3>
   </body>
