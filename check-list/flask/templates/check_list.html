@@ -81,7 +81,8 @@ th { background-color: #4CAF50; color: white; }
         <th>ID</th>
         <th>Order</th>
         <th>Action</th>
-        <th>Choose Check Result</th>
+        <th>Check Action OK</th>
+        <th>Check Action Not&nbsp;OK</th>
       </tr>
       <tr>
         <td>{{ nextItems[0][0] }}</td>
@@ -89,13 +90,10 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ nextItems[0][2] }}</td>
         {% if lenMissing == 0 %}
         <td>
-          <a href="{{ url_for('insert', shot_id=shotId, item_id=nextItems[0][0], status=0) }}" class="btn">OK</a>
+          <a href="{{ url_for('insert', shot_id=shotId, item_id=nextItems[0][0], status=0) }}" class="btn">&#9745;&nbsp;OK</a>
         </td>
         <td>
-          <a href="{{ url_for('insert', shot_id=shotId, item_id=nextItems[0][0], status=1) }}" class="btn">NOK</a>
-        </td>
-        <td>
-          <a href="{{ url_for('attention', shot_id=shotId, item_id=nextItems[0][0]) }}" class="btn">ATT</a>
+          <a href="{{ url_for('attention', shot_id=shotId, item_id=nextItems[0][0]) }}" class="btn">&#9888;&nbsp;ATT</a>
         </td>
         {% endif %}
       </tr>
