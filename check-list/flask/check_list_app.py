@@ -403,14 +403,14 @@ def list_html(system, role, shot=None):
     # {% for line in nextItems %}
     return render_template(
         "check_list.html",
-        shotId=ShotId,
+        shotId=shotId,
         report=report,
         completed=completed,
         missingItems=missingItems,
         lenMissing=len(missingItems),
         nextItems=nextItems,
         lenNext=len(nextItems),
-        roleName=roleName,
+        roleName=role,
         parameters=parameters,
     )
 
