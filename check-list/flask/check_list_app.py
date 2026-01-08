@@ -90,6 +90,7 @@ MISSING_ITEM = (
     "WHERE item.id = ?"
 )
 
+PARAMETERS = "SELECT cc_pressure_sp, He_sp, H2_sp,O2_sp FROM reports WHERE id=?"
 REPORT_FULL = (
     "SELECT item_id, item.seq_order, "
     "time_date, item.name, "
@@ -302,24 +303,30 @@ def list_html(system, role, shot=None):
     if shot is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
-        ShotId = cursor.fetchone()[0]
+        shotId = cursor.fetchone()[0]
         cursor.close()
     else:
-        ShotId = shot
+        shotId = shot
 
-    print(f"Last Shot Id: {ShotId}")
+    print(f"Last Shot Id: {shotId}")
     # if lastShot !=0:
     # reset cursor
     cursor = conn.cursor()
-    cursor.execute("SELECT name FROM role WHERE id = ?", (role,))  # ,
-    roleName = cursor.fetchone()[0]
+    cursor.execute(PARAMETERS, (shotId,))  # ,
+    parameters = cursor.fetchone()
     # print(f"roleName : {role}:{roleName}")
 
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKED,
-        (ShotId, system, role),
+        (shotId, system, role),
+    )
+    cursor.close()
+    cursor = conn.cursor()
+    cursor.execute(
+        LAST_CHECKED,
+        (shotId, system, role),
     )
     lastComplete = cursor.fetchone()
     if lastComplete is None:
@@ -335,7 +342,7 @@ def list_html(system, role, shot=None):
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports WHERE id = ?",
-        (ShotId,),
+        (shotId,),
     )
     report = cursor.fetchall()
     cursor.close()
@@ -343,7 +350,7 @@ def list_html(system, role, shot=None):
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKLINES,
-        (ShotId, system),
+        (shotId, system),
     )
     completed = cursor.fetchall()
     # print("Completed")
@@ -404,6 +411,7 @@ def list_html(system, role, shot=None):
         nextItems=nextItems,
         lenNext=len(nextItems),
         roleName=roleName,
+        parameters=parameters,
     )
 
 
