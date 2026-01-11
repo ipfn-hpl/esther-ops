@@ -1,6 +1,7 @@
 from flask import (
     Flask,
     render_template,
+    render_template_string,
     request,
     redirect,
     url_for,
@@ -182,23 +183,23 @@ def home():
     <h1> Esther Checklist Management. </h1>
     <p>Welcome to ESTHER! Please <a href="/login">Login</a></p>
     <p>Show last Shot <a href="/report">Report</a></p>
-    <p>(to get report for orher shot, add "/shotNumber" to the end of the <a href="/report">Link</a>)</p>
+    <p>(to get report for orher shot Id, add "/shotNumber" to the end of the <a href="/report">Link</a>)</p>
   </body>
 </html>
     """
 
 
 @app.route("/report")
-@app.route("/report/<int:shot>")
-def report(shot=None):
+@app.route("/report/<int:shot_id>")
+def report(shot_id=None):
     conn = get_db()
-    if shot is None:
+    if shot_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
         shotId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = shot
+        shotId = shot_id
 
     cursor = conn.cursor()
     cursor.execute(
@@ -273,6 +274,80 @@ def login():
             <button type="submit">Login</button>
         </form>
     """
+
+
+# Register route
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, shot FROM reports WHERE series_name IN ('S', 'E')  ORDER BY shot DESC LIMIT 1"
+    )
+    last = cursor.fetchone()
+    shot_id = int(last[0])
+    shot = last[1]
+    print(f"Last Id: {shot_id}, Shot: {shot},")
+    cursor.close()
+    if request.method == "POST":
+        shot = request.form["shot"]
+        cc_pressure_sp = request.form["cc_pressure_sp"]
+        he_sp = request.form["He_sp"]
+        h2_sp = request.form["H2_sp"]
+        o2_sp = request.form["O2_sp"]
+
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT shot FROM reports WHERE series_name='S' AND shot=?", (shot,)
+        )
+        shot_exist = cursor.fetchone()
+        cursor.close()
+
+        #    cursor.execute(
+        cursor = conn.cursor()
+        try:
+            if shot_exist:
+                flash("Shot already Exist")
+            else:
+                sql = "INSERT INTO users (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',{0:s},{1:s},{2:s},{3:s},{4:s},)"
+                print(
+                    sql.format(shot, cc_pressure_sp, he_sp, h2_sp, o2_sp),
+                )
+                sql = "INSERT INTO users (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',?,?,?,?,?)"
+                # Insert new Shot
+                # cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+                #             (username, email, hashed_password))
+                # conn.commit()
+        # Check if user already exists
+        # cursor.execute('SELECT * FROM users WHERE username = ? OR email = ?', (username, email))
+        # account = cursor.fetchone()
+
+        # if account:
+        #    flash('Username or email already exists!')
+        # else:
+        #    cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+        #                 (username, email, hashed_password))
+        #    conn.commit()
+        #    flash('Registration successful! Please login.')
+        #    return redirect(url_for('login'))
+        finally:
+            cursor.close()
+            # conn.close()
+
+    form_html = """
+        <form method="post">
+            <h2>Register new Shot</h2>
+            <p>Shot: <input type="number" id="shot" name="shot" value="{{ shot }}" required></p><br>
+            <p>CC Pressure SP <input type="number" id="CC" name="cc_pressure_sp" value="40.0" min="1.0" max="110.0" step="0.1" > <br/>
+            <p>Ratios He_sp <input type="number" id="He" name="He_sp" value="10.0" min="1.0" max="20.0" step="0.1"> /
+            H2_sp <input type="number" id="H2" name="H2_sp" value="2.0" min="0.4" max="4.0" step="0.1" > /
+            O2_sp <input type="number" id="He_sp" name="O2_sp" value="1.2" min="0.2" max="3.0" step="0.1" ><br>
+            <button type="submit">Register</button><br/>
+            <a href={{ url_for('dashboard', shot=shot_id) }}>Dashboard / Login</a><br/>
+            <a href={{ url_for('report', shot_id=shot_id) }}>Last Shot Report</a>
+        </form>
+    """
+    return render_template_string(form_html, shot=shot, shot_id=shot_id)
 
 
 # Protected dashboard route
