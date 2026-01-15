@@ -5,6 +5,8 @@ import numpy as np
 from datetime import datetime
 import argparse
 
+H5FILE = "data_with_metadata"
+
 
 def read_csv_data(args):
     # data = np.genfromtxt(filename, delimiter=" ", dtype='int16')
@@ -83,7 +85,37 @@ def read_bin_data(filepath):
     return data, signal
 
 
-def store_hdf5(data, labels, filename="data_with_metadata"):
+def create_hdf5(labels, filename=H5FILE):
+    # Create and write to HDF5 file
+    data_dir = Path.cwd()
+    file = filename + ".h5"
+    file_path = data_dir / file
+    with h5py.File(file_path, "w", driver="sec2") as f:
+        # Create a dataset and store data
+        group = f.create_group("measurements")
+        # Store labels in a separate dataset
+        """
+        label_dataset = f.create_dataset("labels", data=labels.astype("S"))
+        label_dataset.attrs["description"] = (
+            "Classification labels for each measurement"
+        )
+        """
+        label_dataset = group.create_dataset("labels", data=labels.astype("S"))
+
+        # Add global metadata to the file
+        f.attrs["title"] = "Esther ST Experiment Data"
+        f.attrs["institution"] = "IPFN-HPL Lab"
+        f.attrs["version"] = "1.0"
+        # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
+        # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
+        f.attrs["created_date"] = str(datetime.now())
+        f.attrs["experiment_id"] = "S-116"
+
+    print(f"Data saved to: {file_path}")
+    print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
+
+
+def store_hdf5(data, labels, filename=H5FILE):
     # Create and write to HDF5 file
     data_dir = Path.cwd()
     file = filename + ".h5"
@@ -122,13 +154,39 @@ def store_hdf5(data, labels, filename="data_with_metadata"):
         # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
         # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
         f.attrs["created_date"] = str(datetime.now())
-        f.attrs["experiment_id"] = "S-117"
+        f.attrs["experiment_id"] = "S-116"
 
     print(f"Data saved to: {file_path}")
     print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
 
 
-def update_hdf5(csvfilename, hd5filename="data_with_metadata"):
+def update_red_hdf5(rpfilename, hd5filename="data_with_metadata"):
+    #  Update HDF file with R&S csv data
+    data, signal = read_bin_data(rpfilename)
+    data_dir = Path.cwd()
+    file = hd5filename + ".h5"
+    file_path = data_dir / file
+    with h5py.File(file_path, "a") as f:
+        if "measurements" not in f:
+            print("✗ 'measurements' groups not exist, skipping")
+            return
+        mGroup = f["measurements"]
+        print(list(mGroup.keys()))
+        dataset = mGroup.create_dataset("red-pitaya-cc", data=data, compression="gzip")
+
+        # Add metadata as attributes to the dataset
+        dataset.attrs["description"] = "CC Pressure Kistler Sensor"
+        # dataset.attrs["units"] = "volt"
+        dataset.attrs["units"] = "lsb"
+        dataset.attrs["scale"] = 20  # Bar/Volt
+        dataset.attrs["channels"] = 1
+        dataset.attrs["sampling_rate"] = 125.0e6 / 16  # Hz
+        dataset.attrs["time_offset"] = 0.0  # in seconds
+        dataset.attrs["file_path"] = str(file_path)
+        print(data.shape)
+
+
+def update_rs_hdf5(csvfilename, hd5filename="data_with_metadata"):
     time, signal = read_rs_csv(csvfilename)
     #  Update HDF file with R&S csv data
     data_dir = Path.cwd()
@@ -171,6 +229,9 @@ if __name__ == "__main__":
         description="Script to save binary Esther Shot data in HDF5 files"
     )
     parser.add_argument(
+        "-r", "--red", action="store_true", help="Update with RedPitaya Binary"
+    )
+    parser.add_argument(
         "-c", "--csv", action="store_true", help="Update with Rhode-Schwarz CSV"
     )
     parser.add_argument(
@@ -193,11 +254,14 @@ if __name__ == "__main__":
 
     if args.csv:
         # update_hdf5(args.file_pathtime, ch1_signal)
-        update_hdf5(args.file_path)
+        update_rs_hdf5(args.file_path)
+    elif args.red:
+        update_red_hdf5(args.file_path)
     else:
-        data, signal = read_bin_data(args.file_path)
-        print(f"RP file read. Data len: {len(signal)}")
+        # data, signal = read_bin_data(args.file_path)
+        # print(f"RP file read. Data len: {len(signal)}")
         dirname, basename = os.path.split(args.file_path)
         # Create sample data
         labels = np.array(["class_A", "class_B", "class_C"] * 33 + ["class_A"])
-        store_hdf5(data, labels)
+        create_hdf5(labels)
+        # store_hdf5(data, labels)
