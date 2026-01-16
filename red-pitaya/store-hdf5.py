@@ -69,7 +69,8 @@ def read_rs_csv(filepath):
                     except ValueError:
                         continue
 
-    return np.array(time, dtype=np.float32), np.array(voltage, dtype=np.float32)
+    return time, voltage
+    # return np.array(time, dtype=np.float32), np.array(voltage, dtype=np.float32)
 
 
 def read_bin_data(filepath):
@@ -85,7 +86,7 @@ def read_bin_data(filepath):
     return data, signal
 
 
-def create_hdf5(labels, filename=H5FILE):
+def create_hdf5(labels, args, filename=H5FILE):
     # Create and write to HDF5 file
     data_dir = Path.cwd()
     file = filename + ".h5"
@@ -109,7 +110,7 @@ def create_hdf5(labels, filename=H5FILE):
         # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
         # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
         f.attrs["created_date"] = str(datetime.now())
-        f.attrs["experiment_id"] = "S-116"
+        f.attrs["experiment_id"] = args.experiment_id
 
     print(f"Data saved to: {file_path}")
     print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
@@ -160,9 +161,11 @@ def store_hdf5(data, labels, filename=H5FILE):
     print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
 
 
-def update_red_hdf5(rpfilename, hd5filename="data_with_metadata"):
+def update_red_hdf5(csvfilename, hd5filename="data_with_metadata"):
     #  Update HDF file with R&S csv data
-    data, signal = read_bin_data(rpfilename)
+    # data, signal = read_bin_data(rpfilename)
+    time, signal = read_rs_csv(csvfilename)
+    data = np.array(signal, dtype=np.int16)
     data_dir = Path.cwd()
     file = hd5filename + ".h5"
     file_path = data_dir / file
@@ -183,11 +186,13 @@ def update_red_hdf5(rpfilename, hd5filename="data_with_metadata"):
         dataset.attrs["sampling_rate"] = 125.0e6 / 16  # Hz
         dataset.attrs["time_offset"] = 0.0  # in seconds
         dataset.attrs["file_path"] = str(file_path)
-        print(data.shape)
+        # print(signal.shape)
 
 
 def update_rs_hdf5(csvfilename, hd5filename="data_with_metadata"):
-    time, signal = read_rs_csv(csvfilename)
+    t, data = read_rs_csv(csvfilename)
+    time = np.array(t, dtype=np.float32)
+    signal = np.array(data, dtype=np.float32)
     #  Update HDF file with R&S csv data
     data_dir = Path.cwd()
     file = hd5filename + ".h5"
@@ -229,10 +234,10 @@ if __name__ == "__main__":
         description="Script to save binary Esther Shot data in HDF5 files"
     )
     parser.add_argument(
-        "-r", "--red", action="store_true", help="Update with RedPitaya Binary"
+        "-p", "--pitaya", action="store_true", help="Update with RedPitaya "
     )
     parser.add_argument(
-        "-c", "--csv", action="store_true", help="Update with Rhode-Schwarz CSV"
+        "-s", "--schwarz", action="store_true", help="Update with Rhode-Schwarz CSV"
     )
     parser.add_argument(
         "-f", "--file_path", type=str, help="File to read", default="dataXX"
@@ -252,10 +257,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.csv:
+    if args.schwarz:
         # update_hdf5(args.file_pathtime, ch1_signal)
         update_rs_hdf5(args.file_path)
-    elif args.red:
+    elif args.pitaya:
         update_red_hdf5(args.file_path)
     else:
         # data, signal = read_bin_data(args.file_path)
@@ -263,5 +268,5 @@ if __name__ == "__main__":
         dirname, basename = os.path.split(args.file_path)
         # Create sample data
         labels = np.array(["class_A", "class_B", "class_C"] * 33 + ["class_A"])
-        create_hdf5(labels)
+        create_hdf5(labels, args)
         # store_hdf5(data, labels)
