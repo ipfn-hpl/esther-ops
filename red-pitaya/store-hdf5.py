@@ -109,6 +109,7 @@ def create_hdf5(labels, args, filename=H5FILE):
         f.attrs["version"] = "1.0"
         # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
         # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
+        f.attrs["shot_date"] = args.shot_date  # "2024-12-26_18-01-03"
         f.attrs["created_date"] = str(datetime.now())
         f.attrs["experiment_id"] = args.experiment_id
 
@@ -243,8 +244,12 @@ if __name__ == "__main__":
         "-f", "--file_path", type=str, help="File to read", default="dataXX"
     )
     parser.add_argument(
-        "-e", "--experiment_id", type=str, help="Experimentd", default="S-117"
+        "-e", "--experiment_id", type=str, help="Experiment Id", default="S_117"
     )
+    parser.add_argument(
+        "-d", "--shot_date", type=str, help="Shot date", default="2024-12-26_18-01-03"
+    )
+    """
     parser.add_argument(
         "-m",
         "--maxrows",
@@ -255,6 +260,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", "--decim", type=int, help="Plot decimation", default="100"
     )
+    """
     args = parser.parse_args()
 
     if args.schwarz:
