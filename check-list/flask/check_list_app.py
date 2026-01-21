@@ -259,7 +259,6 @@ def login():
                 session["username"] = account[1]
                 session["roles"] = roles
                 flash("Login successful!")
-                # return redirect(url_for("home"))
                 return redirect(url_for("dashboard"))
             else:
                 flash("Invalid username or password!")
@@ -400,9 +399,9 @@ def list_html(system, role, shot=None):
         for item in precendenceItems:
             befItem = item[1]
             cursor.execute(
-                "SELECT COUNT(*) FROM complete WHERE shot = ? AND item_id = ?",
+                "SELECT COUNT(*) FROM complete WHERE shot=? AND item_id=?",
                 (
-                    ShotId,
+                    shotId,
                     befItem,
                 ),
             )
