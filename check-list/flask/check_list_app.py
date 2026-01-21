@@ -237,8 +237,21 @@ def login():
             if account and check_password_hash(
                 account[2], password
             ):  # account[3] is password column
-                session["user_id"] = account[0]
+                cursor.close()
+                cursor = conn.cursor()
+                user_id = account[0]
+                cursor.execute(
+                    "SELECT role_id FROM `operator_roles` WHERE operator_id=?",
+                    (user_id,),
+                )
+                rls = cursor.fetchall()
+                roles = []
+                for rl in rls:
+                    roles.append(rl[0])
+                print(f"User Roles: {roles}")
+                session["user_id"] = user_id
                 session["username"] = account[1]
+                session["roles"] = roles
                 flash("Login successful!")
                 # return redirect(url_for("home"))
                 return redirect(url_for("dashboard"))
