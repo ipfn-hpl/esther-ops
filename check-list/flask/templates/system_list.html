@@ -22,6 +22,7 @@ th { background-color: #4CAF50; color: white; }
         <th>Order</th>
         <th>Action</th>
         <th>Respons.</th>
+        <th>Precedence Ids</th>
       </tr>
       {% for i in range(0, lenList) %}
       <tr>
@@ -29,7 +30,7 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ system_list[i][1] }}</td>
         <td>{{ system_list[i][2] }}</td>
         <td>{{ system_list[i][3] }}</td>
-        <td></td>
+        <td>{{ system_list[i][5] }}</td>
       </tr>
       {% endfor %}
     </table>

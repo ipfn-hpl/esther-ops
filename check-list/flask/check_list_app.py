@@ -303,11 +303,29 @@ def system_list(
         (phase, system),
     )
     system_list = cursor.fetchall()
+    cursor.close()
+    sList = []
+    for item in system_list:
+        cursor = conn.cursor()
+        print(f"Item: {item}")
+        cursor.execute(
+            "SELECT after_item_id FROM precedence WHERE item_id=?",
+            (item[0],),
+        )
+        precedence_list = cursor.fetchall()
+        newItem = []
+        for field in item:
+            newItem.append(field)
+        newItem.append(precedence_list)
+        sList.append(newItem)
+        cursor.close()
+
+    print(f"sList: {sList}")
     return render_template(
         "system_list.html",
         phase=phase,
         system=system,
-        system_list=system_list,
+        system_list=sList,
         lenList=len(system_list),
     )
 
