@@ -104,6 +104,12 @@ REPORT_FULL = (
     "ORDER BY time_date ASC"
 )
 
+OPERATOR_ROLES = (
+    "SELECT operator_roles.role_id, role.name FROM `operator_roles` "
+    "INNER JOIN role ON role_id = role.id "
+    "WHERE operator_id=?"
+)
+
 app = Flask(__name__)
 # app.secret_key = "your-secret-key-random"  # Change this to a random secret key
 # app.secret_key = os.urandom(24)
@@ -241,13 +247,13 @@ def login():
                 cursor = conn.cursor()
                 user_id = account[0]
                 cursor.execute(
-                    "SELECT role_id FROM `operator_roles` WHERE operator_id=?",
+                    OPERATOR_ROLES,
                     (user_id,),
                 )
                 rls = cursor.fetchall()
                 roles = []
                 for rl in rls:
-                    roles.append(rl[0])
+                    roles.append(rl)
                 print(f"User Roles: {roles}")
                 session["user_id"] = user_id
                 session["username"] = account[1]
@@ -283,7 +289,7 @@ def dashboard(shot=None):
         cursor.close()
     else:
         shotId = shot
-    return render_template("dashboard.html", shotId=shotId)
+    return render_template("dashboard.html", shotId=shotId, roles=session["roles"])
 
 
 @app.route("/system_list/<int:phase>/<int:system>")

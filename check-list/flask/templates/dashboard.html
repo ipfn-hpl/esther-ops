@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Flask CRUD Example - MariaDB</title>
+    <title>Flask Esther Dashboard </title>
     <style>
     body { font-family: Arial; margin: 50px; }
     table { border-collapse: collapse; width: 100%; }
@@ -24,38 +24,25 @@
         <th>Vacuum</th>
         <th>TEST GASES</th>
       </tr>
+      {% for rle in roles %}
       <tr>
-        <td>Chief Engineer</td>
+        <td>{{ rle[1] }}</td>
         <td>
-          <a href="{{ url_for('list_html', system=0, role=0, shot=shotId) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', system=0, role=rle[0], shot=shotId) }}" class="btn">Master</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=1, role=0, shot=shotId) }}" class="btn">Combustion</a>
+          <a href="{{ url_for('list_html', system=1, role=rle[0], shot=shotId) }}" class="btn">Combustion</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=2, role=0, shot=shotId) }}" class="btn">Vacuum</a>
+          <a href="{{ url_for('list_html', system=2, role=rle[0], shot=shotId) }}" class="btn">Vacuum</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=3, role=0, shot=shotId) }}" class="btn">TEST GASES</a>
+          <a href="{{ url_for('list_html', system=3, role=rle[0], shot=shotId) }}" class="btn">Test Gases</a>
         </td>
       </tr>
-      <tr>
-        <td>Researcher</td>
-        <td>
-          <a href="{{ url_for('list_html', system=0, role=1, shot=shotId) }}" class="btn">Master</a>
-        </td>
-        <td>
-          <a href="{{ url_for('list_html', system=1, role=1, shot=shotId) }}" class="btn">Combustion</a>
-        </td>
-        <td>
-          <a href="{{ url_for('list_html', system=2, role=1, shot=shotId) }}" class="btn">Vacuum</a>
-        </td>
-        <td>
-          <a href="{{ url_for('list_html', system=3, role=1, shot=shotId) }}" class="btn">TEST GASES</a>
-        </td>
-      </tr>
+      {% endfor %}
     </table>
-    <h2> General System Lists</h2>
+    <h2> General System Full Lists</h2>
     <table>
       <tr>
         <th>Phase</th>
