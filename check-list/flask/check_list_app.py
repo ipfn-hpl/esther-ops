@@ -26,7 +26,6 @@ from config import DB_CONFIG
 
 DAYPHASE = 1  # Only this phase Implemented
 
-# Reverse Order
 SYSTEM_CHECKLIST = (
     "SELECT item.id, item.seq_order, item.name, role.short_name, "
     "subsystem.name "
@@ -37,6 +36,7 @@ SYSTEM_CHECKLIST = (
     "ORDER BY seq_order ASC"
 )
 
+# Reverse Order
 LAST_CHECKLINES = (
     "SELECT * FROM ("
     "SELECT item_id, item.seq_order, "
@@ -92,6 +92,16 @@ MISSING_ITEM = (
 )
 
 PARAMETERS = "SELECT cc_pressure_sp, He_sp, H2_sp,O2_sp FROM reports WHERE id=?"
+
+# Reverse Order
+REPORT_LIST = (
+    "SELECT * FROM ("
+    "SELECT id, series_name, shot, chief_engineer_id, researcher_id, "
+    "cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports "
+    "ORDER BY id DESC LIMIT ?"
+    ") as myAlias ORDER BY id ASC"
+    )
+
 REPORT_FULL = (
     "SELECT item_id, item.seq_order, "
     "time_date, item.name, "
@@ -365,6 +375,26 @@ def dashboard(shot=None):
         shotId = shot
     return render_template("dashboard.html", shotId=shotId, roles=session["roles"])
 
+
+@app.route("/report_list")
+@app.route("/report_list/<int:limit>")
+def report_list(
+    limit=10,
+):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        REPORT_LIST,
+        (limit, ),
+    )
+    report_list = cursor.fetchall()
+    cursor.close()
+    print(f"report_list: {report_list}")
+    return render_template(
+        "report_list.html",
+        report_list=report_list,
+        lenList=len(report_list),
+    )
 
 @app.route("/system_list/<int:phase>/<int:system>")
 def system_list(

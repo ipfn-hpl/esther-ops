@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Report Web App - MariaDB</title>
+    <style>
+body { font-family: Arial; margin: 50px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #4CAF50; color: white; }
+.btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+  background-color: #008CBA; color: white; border-radius: 3px; }
+            .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther Reports: {{report_list[0][4]}}. Phase:  </h1>
+    <h2>Actions</h2>
+    {% if lenList > 0 %}
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Series</th>
+        <th>Shot</th>
+        <th>chief_engineer_id</th>
+        <th>researcher_id.</th>
+        <th>cc_pressure_sp</th>
+        <th>Show report</th>
+      </tr>
+      {% for i in range(0, lenList) %}
+      <tr>
+        <td>{{ report_list[i][0] }}</td>
+        <td>{{ report_list[i][1] }}</td>
+        <td>{{ report_list[i][2] }}</td>
+        <td>{{ report_list[i][3] }}</td>
+        <td>{{ report_list[i][5] }}</td>
+        <td>{{ report_list[i][6] }}</td>
+        <td><a href={{ url_for('report', shot_id=report_list[i][0]) }}>Shot Report</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+  </body>
+</html>
