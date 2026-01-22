@@ -1,3 +1,4 @@
+import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -43,6 +44,16 @@ def plot_hdf5_rhode_schwarz(filename):
         plt.show()
 
 
+def change_offset_red_pitaya(filename, offset=0.0):
+    """ """
+    # 'r+': Read/write access without deleting existing data.
+    with h5py.File(filename, "r+") as f:
+        dataset_path = "measurements/red-pitaya-cc"
+        dataset = f[dataset_path]
+        dataset.attrs["time_offset"] = offset
+        f.close()
+
+
 def plot_hdf5_red_pitaya(filename):
     """
     Plot a dataset from an HDF5 file
@@ -59,12 +70,13 @@ def plot_hdf5_red_pitaya(filename):
     for key, value in dataset.attrs.items():
         print(f"  {key}: {value}")
     sampling_rate = dataset.attrs["sampling_rate"]
+    time_offset = dataset.attrs["time_offset"]
     print(f"  sampling_rate: {sampling_rate}")
     data = dataset[:]
     yrange = 2**13
     if len(data.shape) == 1:
         print(f"data.shape[0] {data.shape[0]}")
-        time = np.arange(data.shape[0]) / sampling_rate
+        time = np.arange(data.shape[0]) / sampling_rate + time_offset
         plt.figure(figsize=(10, 6))
         plt.plot(
             time,
@@ -210,6 +222,13 @@ if __name__ == "__main__":
         help="The maximum number of rows to read.",
         default="1000000",
     )
+    parser.add_argument(
+        "-o",
+        "--offset",
+        type=float,
+        help="The time offset of the RedPitaya data.",
+        default=0.0,
+    )
     # parser.add_argument(
     #    "-d", "--decim", type=int, help="Plot decimation", default="100"
     # )
@@ -222,6 +241,8 @@ if __name__ == "__main__":
         print(
             f"File '{args.file_path}' not found. Please provide a valid HDF5 file path."
         )
+    if args.offset != 0.0:
+        change_offset_red_pitaya(args.file_path, args.offset)
     # update_hdf5(args.file_pathtime, ch1_signal)
     # update_rs_hdf5(args.file_path)
     if args.schwarz:
