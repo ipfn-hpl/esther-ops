@@ -103,7 +103,8 @@ def create_hdf5(labels, args, filename=H5FILE):
             mgroup.create_group("ct")
             mgroup.create_group("st")
             mgroup.create_group("dt")
-            ccgroup.create_group("kistler")
+            kGroup = ccgroup.create_group("kistler")
+            kGroup.attrs["scale"] = args.kistler_scale  # Bar/Volt
             # Store labels in a separate dataset
             """
             label_dataset = f.create_dataset("labels", data=labels.astype("S"))
@@ -196,18 +197,20 @@ def update_red_hdf5(args, hd5filename="data_with_metadata"):
         dataset.attrs["description"] = "CC Pressure Kistler Sensor red-pitaya data"
         # dataset.attrs["units"] = "volt"
         dataset.attrs["units"] = "lsb"
-        dataset.attrs["scale"] = args.kistler_scale  # Bar/Volt
         dataset.attrs["channels"] = 1
         dataset.attrs["sampling_rate"] = 125.0e6 / 16  # Hz
         dataset.attrs["time_offset"] = 0.0  # in seconds
         dataset.attrs["file_path"] = str(file_path)
         # print(signal.shape)
+        print(f"Data saved to: {file_path}")
+        print(f"File size: {file_path.stat().st_size / 1024 / 1024:.2f} MB")
 
 
 def update_rs_hdf5(csvfilename, hd5filename="data_with_metadata"):
-    t, data = read_rs_csv(csvfilename)
-    time = np.array(t, dtype=np.float32)
-    signal = np.array(data, dtype=np.float32)
+    t, ch1 = read_rs_csv(csvfilename)
+    data = np.array([t, ch1], dtype=np.float32)
+    # time = np.array(t, dtype=np.float32)
+    # signal = np.array(data, dtype=np.float32)
     #  Update HDF file with R&S csv data
     data_dir = Path.cwd()
     file = hd5filename + ".h5"
@@ -216,13 +219,20 @@ def update_rs_hdf5(csvfilename, hd5filename="data_with_metadata"):
         if "measurements" not in f:
             print("✗ 'measurements' groups not exist, skipping")
             return
-        mGroup = f["measurements"]
-        print(list(mGroup.keys()))
+        # mGroup = f["measurements"]
+        kGroup = f["measurements/cc/kistler"]
+        dataset = kGroup.create_dataset("rhode-schwarz", data=data, compression="gzip")
+        dataset.attrs["units"] = "volt"
+        dataset.attrs["channels"] = 1
+        print(list(kGroup.keys()))
+        print(f"Data saved to: {file_path}")
+        print(f"File size: {file_path.stat().st_size / 1024 / 1024:.2f} MB")
+        """
         if "time" not in mGroup:
             dataset = mGroup.create_dataset("time", data=time, compression="gzip")
-            dataset.attrs["description"] = "Rhode-schwarz Control Room"
+            dataset.attrs["description"] = "Rhode-schwarz RTB2004 in Control Room"
             # dataset.attrs["units"] = "volt"
-            dataset.attrs["units"] = "second"
+            dataset.attrs["time_units"] = "second"
         if "rhode-schwarz-cc" not in mGroup:
             dataset = mGroup.create_dataset(
                 "rhode-schwarz-cc", data=signal, compression="gzip"
@@ -232,16 +242,11 @@ def update_rs_hdf5(csvfilename, hd5filename="data_with_metadata"):
             dataset.attrs["units"] = "volt"
             dataset.attrs["scale"] = 20  # Bar/Volt
             dataset.attrs["channels"] = 1
-            # dataset.attrs["file_path"] = str(file_path)
-            # dataset.attrs["sampling_rate"] = 125.0e6 / 16  # Hz
-            # dataset.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
 
         else:
             print("✗ 'rhode-schwarz-cc' dataset already exists, skipping")
+        """
         # Create a dataset and store data in group
-
-    print(f"Data saved to: {file_path}")
-    print(f"File size: {file_path.stat().st_size / 1024 / 1024:.2f} MB")
 
 
 if __name__ == "__main__":
