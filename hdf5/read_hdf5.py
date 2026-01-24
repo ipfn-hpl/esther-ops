@@ -99,6 +99,7 @@ if __name__ == "__main__":
         description="Script to save binary Shot data in HDF5 files"
     )
     parser.add_argument("-c", "--csv", action="store_true", help="Open CSV")
+    parser.add_argument("-e", "--explore", action="store_true", help="Explore hdf")
     parser.add_argument(
         "-f", "--file_path", type=str, help="File to read", default="dataXX.bin"
     )
@@ -117,4 +118,7 @@ if __name__ == "__main__":
     data_dir = Path.cwd()
     file = filename + ".h5"
     file_path = data_dir / file
-    read_hdf5(file_path)
+    if args.explore:
+        explore_hdf5(file_path)
+    else:
+        read_hdf5(file_path)

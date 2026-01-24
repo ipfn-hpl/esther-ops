@@ -91,30 +91,44 @@ def create_hdf5(labels, args, filename=H5FILE):
     data_dir = Path.cwd()
     file = filename + ".h5"
     file_path = data_dir / file
-    with h5py.File(file_path, "w", driver="sec2") as f:
-        # Create a dataset and store data
-        group = f.create_group("measurements")
-        # Store labels in a separate dataset
-        """
-        label_dataset = f.create_dataset("labels", data=labels.astype("S"))
-        label_dataset.attrs["description"] = (
-            "Classification labels for each measurement"
+    try:
+        with h5py.File(
+            file_path, "w-", driver="sec2"
+        ) as f:  # w- Create file, fail if exists
+            # Create a dataset and store data
+            mgroup = f.create_group("measurements")
+            # Multiple intermediate groups can also be created implicitly:
+            ccgroup = f.create_group("measurements/cc")
+            ccgroup.attrs["description"] = "CC Pressure Kistler Sensor"
+            mgroup.create_group("ct")
+            mgroup.create_group("st")
+            mgroup.create_group("dt")
+            ccgroup.create_group("kistler")
+            # Store labels in a separate dataset
+            """
+            label_dataset = f.create_dataset("labels", data=labels.astype("S"))
+            label_dataset.attrs["description"] = (
+                "Classification labels for each measurement"
+            )
+            """
+            label_dataset = mgroup.create_dataset("labels", data=labels.astype("S"))
+
+            # Add global metadata to the file
+            f.attrs["title"] = "Esther ST Experiment Data"
+            f.attrs["institution"] = "IPFN-HPL Lab"
+            f.attrs["version"] = "1.0"
+            # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
+            # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
+            f.attrs["shot_date"] = args.shot_date  # "2024-12-26_18-01-03"
+            f.attrs["created_date"] = str(datetime.now())
+            f.attrs["experiment_id"] = args.experiment_id
+
+        print(f"Data saved to: {file_path}")
+        print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
+    except FileExistsError:
+        print(
+            f"file {file} already exists. Use a different filename or delete the existing file."
         )
-        """
-        label_dataset = group.create_dataset("labels", data=labels.astype("S"))
-
-        # Add global metadata to the file
-        f.attrs["title"] = "Esther ST Experiment Data"
-        f.attrs["institution"] = "IPFN-HPL Lab"
-        f.attrs["version"] = "1.0"
-        # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
-        # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
-        f.attrs["shot_date"] = args.shot_date  # "2024-12-26_18-01-03"
-        f.attrs["created_date"] = str(datetime.now())
-        f.attrs["experiment_id"] = args.experiment_id
-
-    print(f"Data saved to: {file_path}")
-    print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
 
 
 def store_hdf5(data, labels, filename=H5FILE):
@@ -124,8 +138,8 @@ def store_hdf5(data, labels, filename=H5FILE):
     file_path = data_dir / file
     with h5py.File(file_path, "w", driver="sec2") as f:
         # Create a dataset and store data
-        group = f.create_group("measurements")
-        dataset = group.create_dataset("red-pitaya-cc", data=data, compression="gzip")
+        mgroup = f.create_group("measurements")
+        dataset = mgroup.create_dataset("red-pitaya-cc", data=data, compression="gzip")
 
         # Add metadata as attributes to the dataset
         dataset.attrs["description"] = "CC Pressure Kistler Sensor"
@@ -147,7 +161,7 @@ def store_hdf5(data, labels, filename=H5FILE):
             "Classification labels for each measurement"
         )
         """
-        label_dataset = group.create_dataset("labels", data=labels.astype("S"))
+        label_dataset = mgroup.create_dataset("labels", data=labels.astype("S"))
 
         # Add global metadata to the file
         f.attrs["title"] = "Esther ST Experiment Data"
@@ -162,10 +176,10 @@ def store_hdf5(data, labels, filename=H5FILE):
     print(f"File size: {file_path.stat().st_size / 1024:.2f} KB")
 
 
-def update_red_hdf5(csvfilename, hd5filename="data_with_metadata"):
+def update_red_hdf5(args, hd5filename="data_with_metadata"):
     #  Update HDF file with R&S csv data
     # data, signal = read_bin_data(rpfilename)
-    time, signal = read_rs_csv(csvfilename)
+    time, signal = read_rs_csv(args.file_path)
     data = np.array(signal, dtype=np.int16)
     data_dir = Path.cwd()
     file = hd5filename + ".h5"
@@ -174,15 +188,15 @@ def update_red_hdf5(csvfilename, hd5filename="data_with_metadata"):
         if "measurements" not in f:
             print("✗ 'measurements' groups not exist, skipping")
             return
-        mGroup = f["measurements"]
-        print(list(mGroup.keys()))
-        dataset = mGroup.create_dataset("red-pitaya-cc", data=data, compression="gzip")
+        kGroup = f["measurements/cc/kistler"]
+        print(list(kGroup.keys()))
+        dataset = kGroup.create_dataset("red-pitaya", data=data, compression="gzip")
 
         # Add metadata as attributes to the dataset
-        dataset.attrs["description"] = "CC Pressure Kistler Sensor"
+        dataset.attrs["description"] = "CC Pressure Kistler Sensor red-pitaya data"
         # dataset.attrs["units"] = "volt"
         dataset.attrs["units"] = "lsb"
-        dataset.attrs["scale"] = 20  # Bar/Volt
+        dataset.attrs["scale"] = args.kistler_scale  # Bar/Volt
         dataset.attrs["channels"] = 1
         dataset.attrs["sampling_rate"] = 125.0e6 / 16  # Hz
         dataset.attrs["time_offset"] = 0.0  # in seconds
@@ -249,6 +263,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", "--shot_date", type=str, help="Shot date", default="2024-12-26_18-01-03"
     )
+    parser.add_argument(
+        "-k", "--kistler_scale", type=float, help="Kistler scale", default="20.0"
+    )
     """
     parser.add_argument(
         "-m",
@@ -267,7 +284,7 @@ if __name__ == "__main__":
         # update_hdf5(args.file_pathtime, ch1_signal)
         update_rs_hdf5(args.file_path)
     elif args.pitaya:
-        update_red_hdf5(args.file_path)
+        update_red_hdf5(args)
     else:
         # data, signal = read_bin_data(args.file_path)
         # print(f"RP file read. Data len: {len(signal)}")
