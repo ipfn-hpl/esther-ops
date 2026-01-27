@@ -12,17 +12,18 @@ def plot_hdf5_rhode_schwarz(args):
 
     Parameters:
     -----------
-    filename : str
+    args : args
     """
     f = hdf5_file(args.file_path)
-    exp_id = f.attrs["experiment_id"]
+    exp_id = f.attrs["experiment_name"]
     for key, value in f.attrs.items():
         print(f"  {key}: {value}")
 
     # dataset_path = "raw-data/time"
     kGroup = f["raw-data/cc/kistler"]
     print(list(kGroup.keys()))
-    kistler_scale = kGroup.attrs["scale"]
+    kistler_range = kGroup.attrs["range"]
+    kistler_scale = kistler_range / 10.0  # Bar per Volt
     dataset_key = "rhode-schwarz"
     # dataset_path = "raw-data/cc/kistler/rhode-schwarz"
     try:
@@ -33,38 +34,29 @@ def plot_hdf5_rhode_schwarz(args):
     for key, value in dataset.attrs.items():
         print(f"  {key}: {value}")
     data = dataset[:]
+    plt.figure(figsize=(10, 6))
     if len(data.shape) == 1:
         print(f"data.shape[0] {data.shape[0]}")
-        plt.figure(figsize=(10, 6))
         plt.plot(
             # time,
             data * kistler_scale,
             color="blue",
         )  # alpha=0.5)
-        # plt.scatter(time, data / yrange, alpha=0.5)
-        plt.xlabel("Time / s")
         # plt.legend()
-        plt.ylabel("Delta Pressure / Bar")
-        plt.title(f"Plot of {dataset_key}")
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.show()
     elif len(data.shape) == 2 and data.shape[0] == 2:  # Time and ch1 data
         print(f"data.shape {data.shape}")
-        # data = f[dataset_path][:]
-        plt.figure(figsize=(10, 6))
         plt.plot(
             data[0],
             data[1] * kistler_scale,
             color="blue",
         )  # alpha=0.5)
-        plt.title(f"Plot of {dataset_key}, {exp_id}")
         # plt.title(f"Plot of {dataset_key}")
-        plt.ylabel("Delta Pressure / Bar")
-        plt.xlabel("Time / s")
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.show()
+    plt.ylabel("Delta Pressure / Bar")
+    plt.title(f"Plot of {dataset_key}, {exp_id}")
+    plt.xlabel("Time / s")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
 
 
 def change_offset_red_pitaya(filename, offset=0.0):
@@ -87,7 +79,7 @@ def plot_hdf5_red_pitaya(args):
     filename : str
     """
     f = hdf5_file(args.file_path)
-    exp_id = f.attrs["experiment_id"]
+    exp_id = f.attrs["experiment_name"]
     for key, value in f.attrs.items():
         print(f"  {key}: {value}")
     kGroup = f["raw-data/cc/kistler"]
@@ -253,7 +245,7 @@ if __name__ == "__main__":
         "-m",
         "--maxrows",
         type=int,
-        help="The maximum number of rows to read.",
+        help="The maximum number of rows to plot.",
         default="1000000",
     )
     parser.add_argument(
@@ -269,18 +261,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # First, explore the structure
-    """
     try:
         explore_hdf5(args.file_path)
     except FileNotFoundError:
         print(
             f"File '{args.file_path}' not found. Please provide a valid HDF5 file path."
         )
-    """
     if args.offset != 0.0:
         change_offset_red_pitaya(args.file_path, args.offset)
-    # update_hdf5(args.file_pathtime, ch1_signal)
-    # update_rs_hdf5(args.file_path)
     if args.schwarz:
         plot_hdf5_rhode_schwarz(args)
     elif args.pitaya:
@@ -289,8 +277,4 @@ if __name__ == "__main__":
         plot_hdf5_dataset(args.file_path, args.dataset_path)
 
     # plot_hdf5_dataset(filename, "/raw-data/red-pitaya-cc", plot_type="line")
-    # plot_hdf5_dataset(filename, "/raw-data/rhode-schwarz-cc", plot_type="line")
     # Plot a specific dataset (modify the path based on your file structure)
-    # plot_hdf5_dataset(filename, '/time_series', plot_type='line')
-    # plot_hdf5_dataset(filename, '/random_data', plot_type='line')
-    # plot_hdf5_dataset(filename, '/image_data', plot_type='imshow')
