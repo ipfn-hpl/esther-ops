@@ -19,12 +19,12 @@ def plot_hdf5_rhode_schwarz(args):
     for key, value in f.attrs.items():
         print(f"  {key}: {value}")
 
-    # dataset_path = "measurements/time"
-    kGroup = f["measurements/cc/kistler"]
+    # dataset_path = "raw-data/time"
+    kGroup = f["raw-data/cc/kistler"]
     print(list(kGroup.keys()))
     kistler_scale = kGroup.attrs["scale"]
     dataset_key = "rhode-schwarz"
-    # dataset_path = "measurements/cc/kistler/rhode-schwarz"
+    # dataset_path = "raw-data/cc/kistler/rhode-schwarz"
     try:
         dataset = kGroup[dataset_key]
     except KeyError:
@@ -71,8 +71,8 @@ def change_offset_red_pitaya(filename, offset=0.0):
     """ """
     # 'r+': Read/write access without deleting existing data.
     with h5py.File(filename, "r+") as f:
-        # dataset_path = "measurements/red-pitaya-cc"
-        dataset_path = "measurements/cc/kistler/red-pitaya"
+        # dataset_path = "raw-data/red-pitaya-cc"
+        dataset_path = "raw-data/cc/kistler/red-pitaya"
         dataset = f[dataset_path]
         dataset.attrs["time_offset"] = offset
         f.close()
@@ -90,11 +90,11 @@ def plot_hdf5_red_pitaya(args):
     exp_id = f.attrs["experiment_id"]
     for key, value in f.attrs.items():
         print(f"  {key}: {value}")
-    kGroup = f["measurements/cc/kistler"]
+    kGroup = f["raw-data/cc/kistler"]
     # kistler_scale = kGroup.attrs["scale"]
     print(list(kGroup.keys()))
     dataset_key = "red-pitaya"
-    # dataset_path = "measurements/cc/kistler/rhode-schwarz"
+    # dataset_path = "raw-data/cc/kistler/rhode-schwarz"
     try:
         dataset = kGroup[dataset_key]
     except KeyError:
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         "--dataset_path",
         type=str,
         help="Dataset plot to plot",
-        default="/measurements/rhode-schwarz-cc",
+        default="/raw-data/rhode-schwarz-cc",
     )
     parser.add_argument("-e", "--explore", action="store_true", help="Explore hdf5")
     parser.add_argument("-p", "--pitaya", action="store_true", help="Plot RedPitaya ")
@@ -269,12 +269,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # First, explore the structure
+    """
     try:
         explore_hdf5(args.file_path)
     except FileNotFoundError:
         print(
             f"File '{args.file_path}' not found. Please provide a valid HDF5 file path."
         )
+    """
     if args.offset != 0.0:
         change_offset_red_pitaya(args.file_path, args.offset)
     # update_hdf5(args.file_pathtime, ch1_signal)
@@ -286,8 +288,8 @@ if __name__ == "__main__":
     else:
         plot_hdf5_dataset(args.file_path, args.dataset_path)
 
-    # plot_hdf5_dataset(filename, "/measurements/red-pitaya-cc", plot_type="line")
-    # plot_hdf5_dataset(filename, "/measurements/rhode-schwarz-cc", plot_type="line")
+    # plot_hdf5_dataset(filename, "/raw-data/red-pitaya-cc", plot_type="line")
+    # plot_hdf5_dataset(filename, "/raw-data/rhode-schwarz-cc", plot_type="line")
     # Plot a specific dataset (modify the path based on your file structure)
     # plot_hdf5_dataset(filename, '/time_series', plot_type='line')
     # plot_hdf5_dataset(filename, '/random_data', plot_type='line')

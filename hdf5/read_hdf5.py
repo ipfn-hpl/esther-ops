@@ -78,12 +78,12 @@ def read_hdf5(file_path):
 
         f.visititems(print_structure)
 
-        print("\n=== Datasets in group measurements ===")
-        mGroup = f["measurements"]
+        print("\n=== Datasets in group raw-data ===")
+        mGroup = f["raw-data"]
         print(list(mGroup.keys()))
 
-        print("\n=== Dataset: measurements ===")
-        # measurements = f["measurements"][:]
+        print("\n=== Dataset: raw-data ===")
+        # raw-data = f["raw-data"][:]
         rPcc = mGroup["red-pitaya-cc"][:]
         print(f"Shape: {rPcc.shape}")
         print(f"Data type: {rPcc.dtype}")
