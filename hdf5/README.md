@@ -50,22 +50,22 @@ python3 plot_hdf5.py -s -f /afs/ist.utl.pt/groups/esther/HDF5/316/data_with_meta
 
 * The Medata is stored in the attributes of the HDF5 file, and contains the following information:
 
-> created_date: 2026-01-27 19:05:00.696462
-> experiment_name: S-116
-> institution: IPFN-HPL Lab
-> shot_date: 2025-12-23_17-44-44
-> title: Esther ST Experiment Data
-> version: 1.0
+> created_date: 2026-01-27 19:05:00.696462  
+> experiment_name: S-116  
+> institution: IPFN-HPL Lab  
+> shot_date: 2025-12-23_17-44-44  
+> title: Esther ST Experiment Data  
+> version: 1.0  
 
 * The Red Pitaya data is stored in the dataset `raw-data/cc/kistler/red-pitaya`, and contains the raw data acquired from the Red Pitaya oscilloscope. The dataset attributes are.
 
->Dataset 'red-pitaya' attributes:
-> channels: 1
-> description: CC Pressure Kistler Sensor red-pitaya data
-> file_path: /home/esther/git-repos/esther-ops/hdf5/data_with_metadata.h5
-> sampling_rate: 7812500.0
-> time_offset: 0.0
-> units: lsb
-> sampling_rate: 7812500.0
->data.shape[0] 16007168
+>Dataset 'red-pitaya' attributes:  
+> channels: 1  
+> description: CC Pressure Kistler Sensor red-pitaya data  
+> file_path: /home/esther/git-repos/esther-ops/hdf5/data_with_metadata.h5  
+> sampling_rate: 7812500.0  
+> time_offset: 0.0  
+> units: lsb  
+> sampling_rate: 7812500.0  
+>data.shape[0] 16007168  
 >
