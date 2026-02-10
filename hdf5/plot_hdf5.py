@@ -16,11 +16,14 @@ def plot_hdf5_rhode_schwarz(args):
     """
     f = hdf5_file(args.file_path)
     exp_id = f.attrs["experiment_name"]
+    print("")
+    print(f"HDF5 File '{f}' ({exp_id}) attributes:")
     for key, value in f.attrs.items():
         print(f"  {key}: {value}")
 
     # dataset_path = "raw-data/time"
     kGroup = f["raw-data/cc/kistler"]
+    print(f"Group Keys {kGroup}:")
     print(list(kGroup.keys()))
     kistler_range = kGroup.attrs["range"]
     kistler_scale = kistler_range / 10.0  # Bar per Volt
@@ -31,6 +34,8 @@ def plot_hdf5_rhode_schwarz(args):
     except KeyError:
         print(f"object '{dataset_key}' doesn't exist")
         return
+    print("")
+    print(f"Dataset '{dataset_key}' attributes:")
     for key, value in dataset.attrs.items():
         print(f"  {key}: {value}")
     data = dataset[:]
@@ -80,10 +85,13 @@ def plot_hdf5_red_pitaya(args):
     """
     f = hdf5_file(args.file_path)
     exp_id = f.attrs["experiment_name"]
+    print("")
+    print(f"HDF5 File '{f}' ({exp_id}) attributes:")
     for key, value in f.attrs.items():
         print(f"  {key}: {value}")
     kGroup = f["raw-data/cc/kistler"]
     # kistler_scale = kGroup.attrs["scale"]
+    print(f"Group Keys {kGroup}:")
     print(list(kGroup.keys()))
     dataset_key = "red-pitaya"
     # dataset_path = "raw-data/cc/kistler/rhode-schwarz"
@@ -92,6 +100,8 @@ def plot_hdf5_red_pitaya(args):
     except KeyError:
         print(f"object '{dataset_key}' doesn't exist")
         return
+    print("")
+    print(f"Dataset '{dataset_key}' attributes:")
     for key, value in dataset.attrs.items():
         print(f"  {key}: {value}")
     sampling_rate = dataset.attrs["sampling_rate"]
