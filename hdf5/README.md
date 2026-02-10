@@ -1,4 +1,4 @@
-Esther HFD5 Data Acquisition Files
+Esther HFD5 Data Acquisition Files in AFS Storage
 ==============================
 
 1. Install AFS client on your local machine, and connect to `/afs/psi.ch/project/esther`  
