@@ -34,19 +34,19 @@ python3 plot_hdf5.py -s -f /afs/ist.utl.pt/groups/esther/HDF5/316/data_with_meta
 
 3. The HDF5 file is organized in groups and datasets. File contains the following subgroups and datasets:
 
-> Group: cal-data
-> Group: cal-data/cc
-> Group: cal-data/ct
->Group: cal-data/dt
->Group: cal-data/st
->Group: raw-data
->Group: raw-data/cc
->Group: raw-data/cc/kistler
->Dataset: raw-data/cc/kistler/red-pitaya, Shape: (16007168,), Dtype: int16
->Dataset: raw-data/cc/kistler/rhode-schwarz, Shape: (2, 10000000), Dtype: float32
->Group: raw-data/ct
->Group: raw-data/dt
->Group: raw-data/st
+> Group: cal-data  
+> Group: cal-data/cc  
+> Group: cal-data/ct  
+>Group: cal-data/dt  
+>Group: cal-data/st  
+>Group: raw-data  
+>Group: raw-data/cc  
+>Group: raw-data/cc/kistler  
+>Dataset: raw-data/cc/kistler/red-pitaya, Shape: (16007168,), Dtype: int16  
+>Dataset: raw-data/cc/kistler/rhode-schwarz, Shape: (2, 10000000), Dtype: float32  
+>Group: raw-data/ct  
+>Group: raw-data/dt  
+>Group: raw-data/st  
 
 * The Medata is stored in the attributes of the HDF5 file, and contains the following information:
 
