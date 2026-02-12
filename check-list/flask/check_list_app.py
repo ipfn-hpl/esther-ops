@@ -14,112 +14,32 @@ from flask import (
 from werkzeug.security import check_password_hash  # generate_password_hash,
 from functools import wraps
 from datetime import timedelta
-import mariadb
+
+# import mariadb
+import psycopg2
 import sys
 # import os
 
 # import Secrets
-from config import DB_CONFIG
+from config_psql import DB_CONFIG
+from sql_queries import (
+    LAST_CHECKED,
+    LAST_CHECKLINES,
+    MISSING_ITEM,
+    NEXT_CHECKLINES,
+    OPERATOR_ROLES,
+    PARAMETERS,
+    PRECENDENCE,
+    REPORT_LIST,
+    REPORT_FULL,
+    SYSTEM_CHECKLIST,
+)
 # from werkzeug.security import  generate_password_hash
 # hashed_password = generate_password_hash("xxxx", method="pbkdf2:sha256")
 # print(hashed_password)
 
 DAYPHASE = 1  # Only this phase Implemented
 
-SYSTEM_CHECKLIST = (
-    "SELECT item.id, item.seq_order, item.name, role.short_name, "
-    "subsystem.name "
-    "FROM item "
-    "INNER JOIN role ON role_id=role.id "
-    "INNER JOIN subsystem ON subsystem_id=subsystem.id "
-    "WHERE day_phase_id=? AND subsystem_id=? "
-    "ORDER BY seq_order ASC"
-)
-
-# Reverse Order
-LAST_CHECKLINES = (
-    "SELECT * FROM ("
-    "SELECT item_id, item.seq_order, "
-    "time_date, "
-    "role.short_name AS Resp, complete_status.status, "
-    "item.name "
-    "FROM complete "
-    "INNER JOIN item ON item_id = item.id "
-    "INNER JOIN role ON item.role_id = role.id "
-    "INNER JOIN complete_status ON "
-    "complete_status_id = complete_status.id "
-    "WHERE complete.shot = ? AND "
-    # "CheckItemSigned.SignedBy = :sign_by AND "
-    "item.subsystem_id = ? "
-    "ORDER BY time_date DESC LIMIT 5"
-    ") as myAlias ORDER BY time_date ASC"
-)
-
-LAST_CHECKED = (
-    "SELECT item_id, item.seq_order "
-    "FROM complete "
-    "INNER JOIN item ON complete.item_id = item.id "
-    "WHERE complete.shot = ? AND "
-    "item.subsystem_id = ? AND "
-    "item.role_id= ? "
-    "ORDER BY time_date DESC LIMIT 1"
-)
-
-NEXT_CHECKLINES = (
-    "SELECT id, seq_order, name "
-    "FROM item "
-    "WHERE day_phase_id = ? AND subsystem_id = ? AND "
-    "role_id = ? AND seq_order > ? "
-    "ORDER BY seq_order ASC LIMIT 3"
-)
-
-PRECENDENCE = (
-    "SELECT item_id, after_item_id "
-    "FROM precedence "
-    "INNER JOIN item ON item_id = item.id "
-    "WHERE item_id = ? "
-    "ORDER BY item_id ASC"
-)
-
-MISSING_ITEM = (
-    "SELECT role.short_name, item.id, seq_order, item.name, "
-    "subsystem.name AS System, day_phase.short_name AS Phase "
-    "FROM item "
-    "INNER JOIN subsystem ON subsystem_id = subsystem.id "
-    "INNER JOIN day_phase ON day_phase_id = day_phase.id "
-    "INNER JOIN role ON role_id = role.id "
-    "WHERE item.id = ?"
-)
-
-PARAMETERS = "SELECT cc_pressure_sp, He_sp, H2_sp,O2_sp FROM reports WHERE id=?"
-
-# Reverse Order
-REPORT_LIST = (
-    "SELECT * FROM ("
-    "SELECT id, series_name, shot, chief_engineer_id, researcher_id, "
-    "cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports "
-    "ORDER BY id DESC LIMIT ?"
-    ") as myAlias ORDER BY id ASC"
-    )
-
-REPORT_FULL = (
-    "SELECT item_id, item.seq_order, "
-    "time_date, item.name, "
-    "role.short_name AS Resp, complete_status.short_status "
-    "FROM complete "
-    "INNER JOIN item ON item_id = item.id "
-    "INNER JOIN role ON item.role_id = role.id "
-    "INNER JOIN complete_status ON "
-    "complete_status_id = complete_status.id "
-    "WHERE complete.shot = ? "
-    "ORDER BY time_date ASC"
-)
-
-OPERATOR_ROLES = (
-    "SELECT operator_roles.role_id, role.name FROM `operator_roles` "
-    "INNER JOIN role ON role_id = role.id "
-    "WHERE operator_id=?"
-)
 
 app = Flask(__name__)
 # app.secret_key = "your-secret-key-random"  # Change this to a random secret key
@@ -135,8 +55,9 @@ def get_db():
     """Get database connection from Flask's g object (request context)"""
     if "db" not in g:
         try:
-            g.db = mariadb.connect(**DB_CONFIG)
-        except mariadb.Error as e:
+            # g.db = mariadb.connect(**DB_CONFIG)
+            g.db = psycopg2.connect(**DB_CONFIG)
+        except psycopg2.Error as e:
             print(f"Error connecting to MariaDB: {e}")
             sys.exit(1)
     return g.db
@@ -246,7 +167,7 @@ def login():
 
         try:
             cursor.execute(
-                "SELECT id, username, password FROM operator WHERE username = ?",
+                "SELECT id, username, password FROM operator WHERE username = %s",
                 (username,),
             )
             account = cursor.fetchone()
@@ -308,7 +229,7 @@ def register():
 
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT shot FROM reports WHERE series_name='S' AND shot=?", (shot,)
+            "SELECT shot FROM reports WHERE series_name='S' AND shot=%s", (shot,)
         )
         shot_exist = cursor.fetchone()
         cursor.close()
@@ -323,7 +244,7 @@ def register():
                 print(
                     sql.format(shot, cc_pressure_sp, he_sp, h2_sp, o2_sp),
                 )
-                sql = "INSERT INTO users (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',?,?,?,?,?)"
+                sql = "INSERT INTO users (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',%s,%s,%s,%s,%s)"
                 # Insert new Shot
                 # cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
                 #             (username, email, hashed_password))
@@ -385,7 +306,7 @@ def report_list(
     cursor = conn.cursor()
     cursor.execute(
         REPORT_LIST,
-        (limit, ),
+        (limit,),
     )
     report_list = cursor.fetchall()
     cursor.close()
@@ -395,6 +316,7 @@ def report_list(
         report_list=report_list,
         lenList=len(report_list),
     )
+
 
 @app.route("/system_list/<int:phase>/<int:system>")
 def system_list(
@@ -414,7 +336,7 @@ def system_list(
         cursor = conn.cursor()
         print(f"Item: {item}")
         cursor.execute(
-            "SELECT after_item_id FROM precedence WHERE item_id=?",
+            "SELECT after_item_id FROM precedence WHERE item_id=%s",
             (item[0],),
         )
         precedence_list = cursor.fetchall()
@@ -482,7 +404,7 @@ def list_html(system, role, shot=None):
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports WHERE id = ?",
+        "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports WHERE id = %s",
         (shotId,),
     )
     report = cursor.fetchall()
@@ -522,7 +444,7 @@ def list_html(system, role, shot=None):
         for item in precendenceItems:
             befItem = item[1]
             cursor.execute(
-                "SELECT COUNT(*) FROM complete WHERE shot=? AND item_id=?",
+                "SELECT COUNT(*) FROM complete WHERE shot=%s AND item_id=%s",
                 (
                     shotId,
                     befItem,
@@ -563,7 +485,7 @@ def attention(shot_id, item_id):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT subsystem_id,role_id,name FROM item WHERE id = ?",
+        "SELECT subsystem_id,role_id,name FROM item WHERE id = %s",
         (item_id,),
     )
     item = cursor.fetchone()
@@ -589,7 +511,7 @@ def insert(shot_id, item_id, status):
     conn = get_db()
     cursor = conn.cursor()
     INSERT_LINE = (
-        "INSERT INTO complete VALUES (NULL, ?, current_timestamp(), ?, ?, NULL)"
+        "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
     )
     cursor.execute(
         INSERT_LINE,

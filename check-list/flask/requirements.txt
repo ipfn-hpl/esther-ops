@@ -1,6 +1,6 @@
 flask 
 flask_login 
 werkzeug
-mariadb
-# mysql-connector-python
+psycopg2-binary
+# mariadb
 
