@@ -114,23 +114,23 @@ def home():
     <h1> Esther Checklist Management. </h1>
     <p>Welcome to ESTHER! Please <a href="/login">Login</a></p>
     <p>Show last Shot <a href="/report">Report</a></p>
-    <p>(to get report for orher shot Id, add "/shotNumber" to the end of the <a href="/report">Link</a>)</p>
+    <p>(to get report for other shot Id, add "/report_id Number" to the end of the <a href="/report">Link</a>)</p>
   </body>
 </html>
     """
 
 
 @app.route("/report")
-@app.route("/report/<int:shot_id>")
-def report(shot_id=None):
+@app.route("/report/<int:report_id>")
+def report(report_id=None):
     conn = get_db()
-    if shot_id is None:
+    if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
         shotId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = shot_id
+        shotId = report_id
 
     cursor = conn.cursor()
     cursor.execute(
@@ -213,19 +213,19 @@ def register():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, shot FROM reports WHERE series_name IN ('S', 'E')  ORDER BY shot DESC LIMIT 1"
+        "SELECT id, shot FROM reports WHERE series_name IN ('S', 'E')  ORDER BY id DESC LIMIT 1"
     )
     last = cursor.fetchone()
-    shot_id = int(last[0])
+    report_id = int(last[0])
     shot = last[1]
-    print(f"Last Id: {shot_id}, Shot: {shot},")
+    print(f"Last Id: {report_id}, Shot: {shot},")
     cursor.close()
     if request.method == "POST":
         shot = request.form["shot"]
         cc_pressure_sp = request.form["cc_pressure_sp"]
-        he_sp = request.form["He_sp"]
-        h2_sp = request.form["H2_sp"]
-        o2_sp = request.form["O2_sp"]
+        he_sp = request.form["he_sp"]
+        h2_sp = request.form["h2_sp"]
+        o2_sp = request.form["o2_sp"]
 
         cursor = conn.cursor()
         cursor.execute(
@@ -240,11 +240,11 @@ def register():
             if shot_exist:
                 flash("Shot already Exist")
             else:
-                sql = "INSERT INTO users (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',{0:s},{1:s},{2:s},{3:s},{4:s},)"
+                sql = "INSERT INTO reports (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',{0:s},{1:s},{2:s},{3:s},{4:s},)"
                 print(
                     sql.format(shot, cc_pressure_sp, he_sp, h2_sp, o2_sp),
                 )
-                sql = "INSERT INTO users (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',%s,%s,%s,%s,%s)"
+                sql = "INSERT INTO reports (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',%s,%s,%s,%s,%s)"
                 # Insert new Shot
                 # cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
                 #             (username, email, hashed_password))
@@ -274,26 +274,26 @@ def register():
             H2_sp <input type="number" id="H2" name="H2_sp" value="2.0" min="0.4" max="4.0" step="0.1" > /
             O2_sp <input type="number" id="He_sp" name="O2_sp" value="1.2" min="0.2" max="3.0" step="0.1" ><br>
             <button type="submit">Register</button><br/>
-            <a href={{ url_for('dashboard', shot=shot_id) }}>Dashboard / Login</a><br/>
-            <a href={{ url_for('report', shot_id=shot_id) }}>Last Shot Report</a>
+            <a href={{ url_for('dashboard', shot=report_id) }}>Dashboard / Login</a><br/>
+            <a href={{ url_for('report', shot_id=report_id) }}>Last Shot Report</a>
         </form>
     """
-    return render_template_string(form_html, shot=shot, shot_id=shot_id)
+    return render_template_string(form_html, shot=shot, shot_id=report_id)
 
 
 # Protected dashboard route
 @app.route("/dashboard")
-@app.route("/dashboard/<int:shot>")
+@app.route("/dashboard/<int:report_id>")
 @login_required
-def dashboard(shot=None):
+def dashboard(report_id=None):
     conn = get_db()
-    if shot is None:
+    if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
         shotId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = shot
+        shotId = report_id
     return render_template("dashboard.html", shotId=shotId, roles=session["roles"])
 
 
@@ -310,11 +310,24 @@ def report_list(
     )
     report_list = cursor.fetchall()
     cursor.close()
-    print(f"report_list: {report_list}")
+    timeDate = []
+    for rprt in report_list:
+        cursor = conn.cursor()
+        print(f"Report: {rprt}")
+        cursor.execute(
+            "SELECT time_date FROM complete WHERE report_id=%s ORDER BY time_date ASC LIMIT 1",
+            (rprt[0],),
+        )
+        timeDate.append(cursor.fetchone()[0])
+        cursor.close()
+    print(f"timeD: {timeDate}")
+
+    # print(f"report_list: {report_list}")
     return render_template(
         "report_list.html",
         report_list=report_list,
         lenList=len(report_list),
+        timeDate=timeDate,
     )
 
 
@@ -358,18 +371,18 @@ def system_list(
 
 
 @app.route("/list_html/<int:system>/<int:role>")
-@app.route("/list_html/<int:system>/<int:role>/<int:shot>")
+@app.route("/list_html/<int:system>/<int:role>/<int:report_id>")
 @login_required
-def list_html(system, role, shot=None):
+def list_html(system, role, report_id=None):
     # conn = get_db_connection()
     conn = get_db()
-    if shot is None:
+    if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
         shotId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = shot
+        shotId = report_id
 
     print(f"Last Shot Id: {shotId}")
     # if lastShot !=0:
@@ -444,7 +457,7 @@ def list_html(system, role, shot=None):
         for item in precendenceItems:
             befItem = item[1]
             cursor.execute(
-                "SELECT COUNT(*) FROM complete WHERE shot=%s AND item_id=%s",
+                "SELECT COUNT(*) FROM complete WHERE report_id=%s AND item_id=%s",
                 (
                     shotId,
                     befItem,
@@ -479,9 +492,9 @@ def list_html(system, role, shot=None):
 
 
 # I
-@app.route("/attention/<int:shot_id>/<int:item_id>")
+@app.route("/attention/<int:report_id>/<int:item_id>")
 @login_required
-def attention(shot_id, item_id):
+def attention(report_id, item_id):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
@@ -496,7 +509,7 @@ def attention(shot_id, item_id):
     return render_template(
         "attention.html",
         name=name,
-        shot_id=shot_id,
+        shot_id=report_id,
         item_id=item_id,
         system_id=system_id,
         role_id=role_id,
@@ -504,9 +517,9 @@ def attention(shot_id, item_id):
 
 
 # INSERT: Complete Action Status
-@app.route("/insert/<int:shot_id>/<int:item_id>/<int:status>")
+@app.route("/insert/<int:report_id>/<int:item_id>/<int:status>")
 @login_required
-def insert(shot_id, item_id, status):
+def insert(report_id, item_id, status):
     # conn = get_db_connection()
     conn = get_db()
     cursor = conn.cursor()
@@ -516,7 +529,7 @@ def insert(shot_id, item_id, status):
     cursor.execute(
         INSERT_LINE,
         (
-            shot_id,
+            report_id,
             item_id,
             status,
         ),
@@ -524,7 +537,7 @@ def insert(shot_id, item_id, status):
     # Get Item inserted
     print(
         "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
-        % (shot_id, item_id, status)
+        % (report_id, item_id, status)
     )
     cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (item_id,))
     item = cursor.fetchone()

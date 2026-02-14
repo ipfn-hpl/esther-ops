@@ -21,6 +21,7 @@ th { background-color: #4CAF50; color: white; }
         <th>ID</th>
         <th>Series</th>
         <th>Shot</th>
+        <th>First Time/Date </th>
         <th>chief_engineer_id</th>
         <th>researcher_id.</th>
         <th>cc_pressure_sp</th>
@@ -31,9 +32,10 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ report_list[i][0] }}</td>
         <td>{{ report_list[i][1] }}</td>
         <td>{{ report_list[i][2] }}</td>
+        <td>{{ timeDate[i] }}</td>
         <td>{{ report_list[i][3] }}</td>
+        <td>{{ report_list[i][4] }}</td>
         <td>{{ report_list[i][5] }}</td>
-        <td>{{ report_list[i][6] }}</td>
         <td><a href={{ url_for('report', shot_id=report_list[i][0]) }}>Shot Report</a></td>
       </tr>
       {% endfor %}

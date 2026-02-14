@@ -20,7 +20,7 @@ LAST_CHECKLINES = (
     "INNER JOIN role ON item.role_id = role.id "
     "INNER JOIN complete_status ON "
     "complete_status_id = complete_status.id "
-    "WHERE complete.shot = %s AND "
+    "WHERE complete.report_id = %s AND "
     # "CheckItemSigned.SignedBy = :sign_by AND "
     "item.subsystem_id = %s "
     "ORDER BY time_date DESC LIMIT 5"
@@ -31,7 +31,7 @@ LAST_CHECKED = (
     "SELECT item_id, item.seq_order "
     "FROM complete "
     "INNER JOIN item ON complete.item_id = item.id "
-    "WHERE complete.shot = %s AND "
+    "WHERE complete.report_id = %s AND "
     "item.subsystem_id = %s AND "
     "item.role_id= %s "
     "ORDER BY time_date DESC LIMIT 1"
@@ -83,7 +83,7 @@ REPORT_FULL = (
     "INNER JOIN role ON item.role_id = role.id "
     "INNER JOIN complete_status ON "
     "complete_status_id = complete_status.id "
-    "WHERE complete.shot=%s "
+    "WHERE complete.report_id=%s "
     "ORDER BY time_date ASC"
 )
 
