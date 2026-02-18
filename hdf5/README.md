@@ -14,17 +14,19 @@ sudo apt-get install krb5-user (fill the default domain with IST.UTL.PT)
 ```
 
 * reboot
+* Obtain an AFS token an access the data:
 
 ```bash
 kinit istxxxxx
 aklog
 tokens
 cd /afs/ist.utl.pt/groups/esther
+ls -alt
 fs listacl ./ (show access control lists)
 fs listquota -human
 ```
 
-2. Plotting the data
+2. Plotting the data with Python
 
 ```python
 cd ~/git-repos/esther-ops/hdf5
