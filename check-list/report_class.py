@@ -23,7 +23,7 @@ BOTTLES_CHANNELS = [
 class EstherReport:
     """ """
 
-    def __init__(self, shotId=None):
+    def __init__(self, report_id=None):
         """
         Initializes the DB connection
         """
@@ -32,7 +32,7 @@ class EstherReport:
         # self.dictCursor = self.conn.cursor(
         #    cursor_factory=psycopg2.extras.RealDictCursor
         # )
-        if shotId is None:
+        if report_id is None:
             """
             cursor = self.conn.cursor()
             query = "SELECT id FROM reports ORDER BY id DESC LIMIT 1"
@@ -40,7 +40,7 @@ class EstherReport:
             result = cursor.fetchone()
             cursor.close()
             """
-            result = self.GetLastShot()
+            result = self.GetLastReport()
             if result is not None:
                 self.id = result[0]
         else:
@@ -53,7 +53,7 @@ class EstherReport:
                 self.id = result[0]
         print(f"Report ID: {self.id}")
 
-    def GetLastShot(self):
+    def GetLastReport(self):
         cursor = self.conn.cursor()
         query = "SELECT id FROM reports ORDER BY id DESC LIMIT 1"
         cursor.execute(query)

@@ -13,8 +13,8 @@ th { background-color: #4CAF50; color: white; }
     </style>
   </head>
   <body>
-    <h1> Esther Checklist Management. Shot Id {{shotId}} </h1>
-    <h2>Completed Actions in Shot {{shotId}}</h2>
+    <h1> Esther Checklist Management. Shot Id {{reportId}} </h1>
+    <h2>Completed Actions in Shot {{reportId}}</h2>
     <table>
       <tr>
         <th>ID</th>
@@ -36,7 +36,7 @@ th { background-color: #4CAF50; color: white; }
       {% endfor %}
     </table>
 
-    <h2>Select Other <a href="{{ url_for('dashboard', shot=shotId) }}">List</a></h2>
+    <h2>Select Other <a href="{{ url_for('dashboard', shot=reportId) }}">List</a></h2>
     <h3> <a href="/logout">Logout</a></h3>
   </body>
 </html>

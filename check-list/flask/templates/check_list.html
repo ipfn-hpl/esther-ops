@@ -14,15 +14,15 @@ th { background-color: #4CAF50; color: white; }
     <meta http-equiv="refresh" content="5">
   </head>
   <body>
-    <h1> {{roleName}}: Esther Checklist Management. Shot Id {{shotId}} </h1>
+    <h1> {{roleName}}: Esther Checklist Management. Report Id {{reportId}} </h1>
     <h2> Parameters: CC_Target:{{parameters[0]}} Bar, SP He/H2/O2: {{parameters[1]}}/{{parameters[2]}}/{{parameters[3]}}</h2>
     <table>
       <tr>
         <th>ID</th>
-        <th>Shot</th>
+        <th>Report</th>
         <th>Actions</th>
       </tr>
-      {% for rprt in report %}
+      {% for rprt in reportItems %}
       <tr>
         <td>{{ rprt[0] }}</td>
         <td>{{ rprt[1] }}</td>
@@ -31,7 +31,7 @@ th { background-color: #4CAF50; color: white; }
       {% endfor %}
     </table>
 <hr style="height: 3px; background-color: gray; width:98%;">
-    <h2>Completed Actions in Shot {{shotId}}</h2>
+    <h2>Completed Actions in Report {{reportId}}</h2>
     <table>
       <tr>
         <th>ID</th>
@@ -91,10 +91,10 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ nextItems[0][2] }}</td>
         {% if lenMissing == 0 %}
         <td>
-          <a href="{{ url_for('insert', shot_id=shotId, item_id=nextItems[0][0], status=0) }}" class="btn">&#9745;&nbsp;OK</a>
+          <a href="{{ url_for('insert', report_id=reportId, item_id=nextItems[0][0], status=0) }}" class="btn">&#9745;&nbsp;OK</a>
         </td>
         <td>
-          <a href="{{ url_for('attention', shot_id=shotId, item_id=nextItems[0][0]) }}" class="btn">&#9888;&nbsp;ATT</a>
+          <a href="{{ url_for('attention', report_id=reportId, item_id=nextItems[0][0]) }}" class="btn">&#9888;&nbsp;ATT</a>
         </td>
         {% endif %}
       </tr>
@@ -110,7 +110,7 @@ th { background-color: #4CAF50; color: white; }
     {% endif %}
 <hr style="height: 3px; background-color: gray; width:98%;">
     <button onClick="window.location.reload();">Refresh Tables</button>
-    <h2>Select Other <a href="{{ url_for('dashboard', shot=shotId) }}">List</a></h2>
+    <h2>Select Other <a href="{{ url_for('dashboard', shot=reportId) }}">List</a></h2>
     <h3> <a href="/logout">Logout</a></h3>
   </body>
 </html>

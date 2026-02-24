@@ -14,7 +14,7 @@
   </head>
   <body>
     <h1>Esther Checklist Management (MariaDB)</h1>
-    <h2> Shot Id: {{shotId}} </h2>
+    <h2> Report Id: {{reportId}} </h2>
     <h2> Checklist Signing Tables</h2>
     <table>
       <tr>
@@ -28,16 +28,16 @@
       <tr>
         <td>{{ rle[1] }}</td>
         <td>
-          <a href="{{ url_for('list_html', system=0, role=rle[0], shot=shotId) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', system=0, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=1, role=rle[0], shot=shotId) }}" class="btn">Combustion</a>
+          <a href="{{ url_for('list_html', system=1, role=rle[0], report_id=reportId) }}" class="btn">Combustion</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=2, role=rle[0], shot=shotId) }}" class="btn">Vacuum</a>
+          <a href="{{ url_for('list_html', system=2, role=rle[0], report_id=reportId) }}" class="btn">Vacuum</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=3, role=rle[0], shot=shotId) }}" class="btn">Test Gases</a>
+          <a href="{{ url_for('list_html', system=3, role=rle[0], report_id=reportId) }}" class="btn">Test Gases</a>
         </td>
       </tr>
       {% endfor %}

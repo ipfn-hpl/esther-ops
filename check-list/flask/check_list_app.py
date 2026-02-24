@@ -127,20 +127,20 @@ def report(report_id=None):
     if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
-        shotId = cursor.fetchone()[0]
+        reportId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = report_id
+        reportId = report_id
 
     cursor = conn.cursor()
     cursor.execute(
         REPORT_FULL,
-        (shotId,),
+        (reportId,),
     )
     completed = cursor.fetchall()
     return render_template(
         "report.html",
-        shotId=shotId,
+        reportId=reportId,
         completed=completed,
     )
 
@@ -221,7 +221,7 @@ def register():
     print(f"Last Id: {report_id}, Shot: {shot},")
     cursor.close()
     if request.method == "POST":
-        shot = request.form["shot"]
+        reportId = request.form["reportId"]
         cc_pressure_sp = request.form["cc_pressure_sp"]
         he_sp = request.form["he_sp"]
         h2_sp = request.form["h2_sp"]
@@ -229,41 +229,43 @@ def register():
 
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT shot FROM reports WHERE series_name='S' AND shot=%s", (shot,)
+            "SELECT id FROM reports WHERE series_name='S' AND id=%s", (reportId,)
         )
-        shot_exist = cursor.fetchone()
+        report_exist = cursor.fetchone()
         cursor.close()
 
         #    cursor.execute(
         cursor = conn.cursor()
-        try:
-            if shot_exist:
-                flash("Shot already Exist")
-            else:
-                sql = "INSERT INTO reports (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',{0:s},{1:s},{2:s},{3:s},{4:s},)"
+        if report_exist:
+            flash("Shot already Exist")
+        else:
+            try:
+                sql = "INSERT INTO reports (series_name, shot,cc_pressure_sp, he_sp, h2_sp, o2_sp) VALUES ('S',{0:s},{1:s},{2:s},{3:s},{4:s},)"
                 print(
                     sql.format(shot, cc_pressure_sp, he_sp, h2_sp, o2_sp),
                 )
-                sql = "INSERT INTO reports (series_name, shot,cc_pressure_sp, He_sp, H2_sp, O2_sp) VALUES ('S',%s,%s,%s,%s,%s)"
+                sql = (
+                    "INSERT INTO reports (series_name, shot,cc_pressure_sp, he_sp, h2_sp, o2_sp) "
+                    "VALUES ('S',%s,%s,%s,%s,%s)"
+                )
                 # Insert new Shot
                 # cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
                 #             (username, email, hashed_password))
                 # conn.commit()
-        # Check if user already exists
-        # cursor.execute('SELECT * FROM users WHERE username = ? OR email = ?', (username, email))
-        # account = cursor.fetchone()
+            # Check if user already exists
+            # cursor.execute('SELECT * FROM users WHERE username = ? OR email = ?', (username, email))
+            # account = cursor.fetchone()
 
-        # if account:
-        #    flash('Username or email already exists!')
-        # else:
-        #    cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-        #                 (username, email, hashed_password))
-        #    conn.commit()
-        #    flash('Registration successful! Please login.')
-        #    return redirect(url_for('login'))
-        finally:
-            cursor.close()
-            # conn.close()
+            # if account:
+            #    flash('Username or email already exists!')
+            # else:
+            #    cursor.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+            #                 (username, email, hashed_password))
+            #    conn.commit()
+            #    flash('Registration successful! Please login.')
+            #    return redirect(url_for('login'))
+            finally:
+                cursor.close()
 
     form_html = """
         <form method="post">
@@ -274,7 +276,7 @@ def register():
             H2_sp <input type="number" id="H2" name="H2_sp" value="2.0" min="0.4" max="4.0" step="0.1" > /
             O2_sp <input type="number" id="He_sp" name="O2_sp" value="1.2" min="0.2" max="3.0" step="0.1" ><br>
             <button type="submit">Register</button><br/>
-            <a href={{ url_for('dashboard', shot=report_id) }}>Dashboard / Login</a><br/>
+            <a href={{ url_for('dashboard', reportId=report_id) }}>Dashboard / Login</a><br/>
             <a href={{ url_for('report', shot_id=report_id) }}>Last Shot Report</a>
         </form>
     """
@@ -290,11 +292,11 @@ def dashboard(report_id=None):
     if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
-        shotId = cursor.fetchone()[0]
+        reportId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = report_id
-    return render_template("dashboard.html", shotId=shotId, roles=session["roles"])
+        reportId = report_id
+    return render_template("dashboard.html", reportId=reportId, roles=session["roles"])
 
 
 @app.route("/report_list")
@@ -379,16 +381,16 @@ def list_html(system, role, report_id=None):
     if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
-        shotId = cursor.fetchone()[0]
+        reportId = cursor.fetchone()[0]
         cursor.close()
     else:
-        shotId = report_id
+        reportId = report_id
 
-    print(f"Last Shot Id: {shotId}")
+    print(f"Last Report Id: {reportId}")
     # if lastShot !=0:
     # reset cursor
     cursor = conn.cursor()
-    cursor.execute(PARAMETERS, (shotId,))  # ,
+    cursor.execute(PARAMETERS, (reportId,))  # ,
     parameters = cursor.fetchone()
     # print(f"roleName : {role}:{roleName}")
 
@@ -396,13 +398,13 @@ def list_html(system, role, report_id=None):
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKED,
-        (shotId, system, role),
+        (reportId, system, role),
     )
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKED,
-        (shotId, system, role),
+        (reportId, system, role),
     )
     lastComplete = cursor.fetchone()
     if lastComplete is None:
@@ -417,16 +419,16 @@ def list_html(system, role, report_id=None):
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, He_sp, H2_sp, O2_sp FROM reports WHERE id = %s",
-        (shotId,),
+        "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, he_sp, h2_sp, o2_sp FROM reports WHERE id = %s",
+        (reportId,),
     )
-    report = cursor.fetchall()
+    reportItems = cursor.fetchall()
     cursor.close()
 
     cursor = conn.cursor()
     cursor.execute(
         LAST_CHECKLINES,
-        (shotId, system),
+        (reportId, system),
     )
     completed = cursor.fetchall()
     # print("Completed")
@@ -459,7 +461,7 @@ def list_html(system, role, report_id=None):
             cursor.execute(
                 "SELECT COUNT(*) FROM complete WHERE report_id=%s AND item_id=%s",
                 (
-                    shotId,
+                    reportId,
                     befItem,
                 ),
             )
@@ -479,8 +481,8 @@ def list_html(system, role, report_id=None):
     # {% for line in nextItems %}
     return render_template(
         "check_list.html",
-        shotId=shotId,
-        report=report,
+        reportId=reportId,
+        reportItems=reportItems,
         completed=completed,
         missingItems=missingItems,
         lenMissing=len(missingItems),
@@ -509,7 +511,7 @@ def attention(report_id, item_id):
     return render_template(
         "attention.html",
         name=name,
-        shot_id=report_id,
+        report_id=report_id,
         item_id=item_id,
         system_id=system_id,
         role_id=role_id,
@@ -524,28 +526,45 @@ def insert(report_id, item_id, status):
     conn = get_db()
     cursor = conn.cursor()
     INSERT_LINE = (
-        "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
+        "INSERT INTO complete (report_id, time_date, item_id, complete_status_id) "
+        "VALUES (%s, current_timestamp, %s, %s)"
     )
-    cursor.execute(
-        INSERT_LINE,
-        (
-            report_id,
-            item_id,
-            status,
-        ),
-    )
+    try:
+        cursor.execute(
+            INSERT_LINE,
+            (
+                report_id,
+                item_id,
+                status,
+            ),
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        print(f"executed query {cursor.query}")
+
     # Get Item inserted
-    print(
-        "INSERT INTO complete VALUES (NULL, %s, current_timestamp(), %s, %s, NULL)"
-        % (report_id, item_id, status)
-    )
-    cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (item_id,))
+    # print(
+    # "INSERT INTO complete VALUES (NULL, %s, current_timestamp, %s, %s, NULL)"
+    # % (report_id, item_id, status)
+    # )
+    cursor.close()
+    cursor = conn.cursor()
+    try:
+        select_query = "SELECT subsystem_id, role_id FROM item WHERE id = %s"
+        cursor.execute(select_query, (item_id,))
+        # cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (item_id,))
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        print(f"executed query {cursor.query}")
     item = cursor.fetchone()
     system = item[0]
     role = item[1]
     print(f"System: {system}, Role: {role}")
 
-    conn.commit()
+    # conn.commit()
     cursor.close()
 
     return redirect(url_for("list_html", system=system, role=role))
