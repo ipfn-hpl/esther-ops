@@ -17,6 +17,7 @@ from datetime import timedelta
 
 # import mariadb
 import psycopg2
+import psycopg2.extras
 import sys
 # import os
 
@@ -32,7 +33,7 @@ from sql_queries import (
     PRECENDENCE,
     REPORT_LIST,
     REPORT_FULL,
-    SYSTEM_CHECKLIST,
+    #  SYSTEM_CHECKLIST,
 )
 # from werkzeug.security import  generate_password_hash
 # hashed_password = generate_password_hash("xxxx", method="pbkdf2:sha256")
@@ -340,8 +341,15 @@ def system_list(
 ):
     conn = get_db()
     cursor = conn.cursor()
+    """
     cursor.execute(
         SYSTEM_CHECKLIST,
+        (phase, system),
+    )
+    """
+    query = "SELECT * FROM get_system_list(%s, %s)"
+    cursor.execute(
+        query,
         (phase, system),
     )
     system_list = cursor.fetchall()

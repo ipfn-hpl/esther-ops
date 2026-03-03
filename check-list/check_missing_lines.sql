@@ -1,13 +1,13 @@
 CREATE OR REPLACE FUNCTION check_missing_items(p_report_id INT, p_item INT)
 -- RETURNS TABLE(after_id INT, checked BOOL)
-RETURNS TABLE(after_id INT, required INT, status INT, found BOOLEAN)
+RETURNS TABLE(after_id INT, required INT, status INT, signed BOOLEAN)
 LANGUAGE plpgsql
 AS $$
 DECLARE
     rec RECORD;
     found_rec RECORD;
     -- check_rec RECORD;
-    v_cnt INT;
+    -- v_cnt INT;
 BEGIN
     FOR rec IN
         SELECT after_item_id, min_status
@@ -34,22 +34,20 @@ BEGIN
           after_id      := rec.after_item_id;
           --cnt           := v_cnt;
           required      := rec.min_status;
-          found         := false;
+          signed         := true;
           IF found_rec.complete_status_id > rec.min_status THEN
             status        := found_rec.complete_status_id;
-            v_cnt := 11;
           ELSE
-            status        := -2;
+            status        := 0;
           END IF;    
 
           --SELECT complete_status_id 
         ELSE
 
           after_id      := rec.after_item_id;
-          --cnt           := v_cnt;
           required      := rec.min_status;
           status        := -1;
-          found         := false;
+          signed         := false;
 
         END IF;    
         -- checked       := exists;
