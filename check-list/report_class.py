@@ -46,7 +46,7 @@ class EstherReport:
         else:
             cursor = self.conn.cursor()
             query = "SELECT id FROM reports WHERE id=%s"
-            cursor.execute(query)
+            cursor.execute(query, (report_id,))
             result = cursor.fetchone()
             cursor.close()
             if result is not None:

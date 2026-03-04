@@ -25,7 +25,7 @@ import sys
 from config_psql import DB_CONFIG
 from sql_queries import (
     LAST_CHECKED,
-    LAST_CHECKLINES,
+    # LAST_CHECKLINES,
     MISSING_ITEM,
     NEXT_CHECKLINES,
     OPERATOR_ROLES,
@@ -408,12 +408,6 @@ def list_html(system, role, report_id=None):
         LAST_CHECKED,
         (reportId, system, role),
     )
-    cursor.close()
-    cursor = conn.cursor()
-    cursor.execute(
-        LAST_CHECKED,
-        (reportId, system, role),
-    )
     lastComplete = cursor.fetchone()
     if lastComplete is None:
         print("No completed items. ")
@@ -434,9 +428,14 @@ def list_html(system, role, report_id=None):
     cursor.close()
 
     cursor = conn.cursor()
+    query = "SELECT * FROM get_signed_items(%s, %s)"
     cursor.execute(
-        LAST_CHECKLINES,
-        (reportId, system),
+        query,
+        # LAST_CHECKLINES,
+        (
+            reportId,
+            system,
+        ),
     )
     completed = cursor.fetchall()
     # print("Completed")
