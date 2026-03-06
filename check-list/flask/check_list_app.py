@@ -24,13 +24,13 @@ import sys
 # import Secrets
 from config_psql import DB_CONFIG
 from sql_queries import (
-    LAST_CHECKED,
+    # LAST_CHECKED,
     # LAST_CHECKLINES,
     MISSING_ITEM,
-    NEXT_CHECKLINES,
+    # NEXT_CHECKLINES,
     OPERATOR_ROLES,
     PARAMETERS,
-    PRECENDENCE,
+    # PRECENDENCE,
     REPORT_LIST,
     REPORT_FULL,
     #  SYSTEM_CHECKLIST,
@@ -404,11 +404,20 @@ def list_html(system, role, report_id=None):
 
     cursor.close()
     cursor = conn.cursor()
+    query = "SELECT * FROM last_signed(%s,%s,%s)"
     cursor.execute(
-        LAST_CHECKED,
-        (reportId, system, role),
+        # LAST_CHECKED,
+        query,
+        (
+            reportId,
+            system,
+            role,
+        ),
     )
-    lastComplete = cursor.fetchone()
+    # lastComplete = cursor.fetchone()
+    lastItem, lastOrder = cursor.fetchone()
+    """
+    print(f"lastComplete : {lastComplete}")
     if lastComplete is None:
         print("No completed items. ")
         lastItem = 0
@@ -417,7 +426,7 @@ def list_html(system, role, report_id=None):
     else:
         lastItem = lastComplete[0]
         lastOrder = lastComplete[1]
-    print(f"Last item, Order: {lastItem}, {lastOrder}")
+    """
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
@@ -426,6 +435,25 @@ def list_html(system, role, report_id=None):
     )
     reportItems = cursor.fetchall()
     cursor.close()
+    if lastOrder is None:
+        lastOrder = 0
+    if lastOrder is None:
+        lastOrder = 0
+    print(f"Last item, Order: {lastItem}, {lastOrder}")
+    """
+    cursor = conn.cursor()
+    query = "SELECT * FROM check_missing_items(%s, %s)"
+    cursor.execute(
+        query,
+        (
+            reportId,
+            lastOrder,
+        ),
+    )
+    missing_lines = cursor.fetchall()
+    print(f"missing_lines : {missing_lines}")
+    cursor.close()
+    """
 
     cursor = conn.cursor()
     query = "SELECT * FROM get_signed_items(%s, %s)"
@@ -442,8 +470,10 @@ def list_html(system, role, report_id=None):
 
     cursor.close()
     cursor = conn.cursor()
+    query = "SELECT * FROM get_next_items(%s,%s,%s,%s, 3)"
     cursor.execute(
-        NEXT_CHECKLINES,
+        # NEXT_CHECKLINES,
+        query,
         (
             DAYPHASE,
             system,
@@ -452,7 +482,54 @@ def list_html(system, role, report_id=None):
         ),
     )
     nextItems = cursor.fetchall()
-    print(f"NEXT_CHECKLINES {nextItems}, len: {len(nextItems)}")
+    cursor.close()
+    if not nextItems:
+        # print("No results found")
+        missingItems = []
+    else:
+        # print(f"Found {len(nextItems)} rows")
+        nextItem2Sign = nextItems[0][0]
+        print(f"Next item to sign: {nextItem2Sign}")
+        # for row in nextItems:
+        #    print(row)
+        cursor = conn.cursor()
+        query = "SELECT * FROM check_missing_items(%s,%s)"
+        cursor.execute(
+            # NEXT_CHECKLINES,
+            query,
+            (
+                reportId,
+                nextItem2Sign,
+            ),
+        )
+        precedenceItems = cursor.fetchall()
+        cursor.close()
+        missingItems = []
+        failedItems = []
+        if not precedenceItems:
+            print("No precedenceItems found")
+            # missingItems = []
+        else:
+            print("Checking items for next to sign: ")
+            for row in precedenceItems:
+                print(row)
+                if row[3] is False:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        MISSING_ITEM,
+                        (row[0],),
+                    )
+                    missingItems.append(cursor.fetchone())
+                    cursor.close()
+                elif row[2] != 0:
+                    failedItems.append(row)
+                    print(f"Failed item: {row}")
+
+    """
+    # if nextItems is []:
+    print(
+        f"NEXT_CHECKLINES {nextItems}, len: {len(nextItems)}, cursor.des {cursor.description}"
+    )
     missingItems = []
     if len(nextItems) > 0:
         item2Sign = nextItems[0][0]
@@ -482,6 +559,7 @@ def list_html(system, role, report_id=None):
                 missingItems.append(cursor.fetchone())
         print(f"precendenceItems: {precendenceItems}, missingItems:{missingItems}")
 
+    """
     cursor.close()
 
     # <a href="{{ url_for('edit', id=nextItems[i][0]) }}" class="btn">Edit</a>

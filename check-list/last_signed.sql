@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION get_last_signed(
+CREATE OR REPLACE FUNCTION last_signed(
   p_report_id INT, 
   p_subsystem_id INT,
   p_role_id   INT,
