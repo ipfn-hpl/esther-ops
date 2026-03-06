@@ -26,7 +26,7 @@ from config_psql import DB_CONFIG
 from sql_queries import (
     # LAST_CHECKED,
     # LAST_CHECKLINES,
-    MISSING_ITEM,
+    # MISSING_ITEM,
     # NEXT_CHECKLINES,
     OPERATOR_ROLES,
     PARAMETERS,
@@ -515,8 +515,14 @@ def list_html(system, role, report_id=None):
                 print(row)
                 if row[3] is False:
                     cursor = conn.cursor()
+                    query = (
+                        "SELECT * FROM missing_item(%s) AS "
+                        "(r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, "
+                        "i_name TEXT, s_name TEXT, d_short_name TEXT)"
+                    )
                     cursor.execute(
-                        MISSING_ITEM,
+                        # MISSING_ITEM,
+                        query,
                         (row[0],),
                     )
                     missingItems.append(cursor.fetchone())

@@ -1,46 +1,23 @@
-
-CREATE OR REPLACE FUNCTION missing_item(
-  p_item_id INT, 
-  OUT role_short_name TEXT,
-  OUT item_name TEXT,
-  OUT seq_order  INT,
-  OUT subsystem_name TEXT,
-  OUT phase_short_name TEXT
-)
+CREATE OR REPLACE FUNCTION missing_item(p_item_id INT)
+RETURNS RECORD
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    result RECORD;
 BEGIN
-    SELECT r.short_name
-    INTO role_short_name
+    
+    SELECT r.short_name, i.id, i.seq_order, i.name, 
+    s.name AS subsystem_name, d.short_name AS day_phase
     FROM item i
+    INTO result
+    INNER JOIN subsystem s ON i.subsystem_id = s.id
+    INNER JOIN day_phase d ON i.day_phase_id = d.id
     INNER JOIN role r ON i.role_id = r.id
     WHERE i.id = p_item_id;
 
-    SELECT i.name
-    INTO item_name
-    FROM item i 
-    WHERE i.id = p_item_id;
-
-    SELECT i.seq_order
-    INTO seq_order
-    FROM item i 
-    WHERE i.id = p_item_id;
-
-    SELECT s.name
-    INTO subsystem_name
-    FROM item i
-    INNER JOIN subsystem s ON i.subsystem_id = s.id
-    WHERE i.id = p_item_id;
-
-    SELECT d.short_name
-    INTO phase_short_name
-    FROM item i
-    INNER JOIN day_phase d ON i.day_phase_id = d.id
-    WHERE i.id = p_item_id;
+    RETURN result;
 END;
 $$;
 
--- Call it like a table
--- SELECT role_short_name, item_name, seq_order, subsystem_name, phase_short_name FROM missing_item(3);
--- OR access individually:
--- SELECT (missing_item(3)).item_name;
+-- Must define column types when calling
+--SELECT * FROM missing_item(4) AS (r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, i_name TEXT, s_name TEXT, d_short_name TEXT);
