@@ -1,10 +1,16 @@
 CREATE OR REPLACE FUNCTION get_system_list(p_phase INT, p_system_id INT)
-RETURNS TABLE(item_id INT, item_order SMALLINT, item_name TEXT, role TEXT, subsystem TEXT)
+RETURNS TABLE(
+  item_id INT, 
+  item_order SMALLINT, 
+  item_name TEXT, 
+  role TEXT, 
+  subsystem TEXT,
+  item_min_status SMALLINT)
 LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT i.id, i.seq_order, i.name, r.short_name, s.name
+    SELECT i.id, i.seq_order, i.name, r.short_name, s.name, i.min_status
     FROM item i
     INNER JOIN role r ON i.role_id=r.id
     INNER JOIN subsystem s ON i.subsystem_id=s.id
@@ -18,4 +24,4 @@ END;
 $$;
 
 -- Call it like a table
---SELECT * FROM get_processed_orders('pending');
+--SELECT * FROM get_system_list(phase, system_id);

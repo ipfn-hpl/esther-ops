@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Flask ESTHER Checklist Web App - MariaDB</title>
+    <title>Flask ESTHER Checklist {{system_list[0][4]}}</title>
     <style>
 body { font-family: Arial; margin: 50px; }
 table { border-collapse: collapse; width: 100%; }
@@ -22,6 +22,7 @@ th { background-color: #4CAF50; color: white; }
         <th>Order</th>
         <th>Action</th>
         <th>Respons.</th>
+        <th>Min Status</th>
         <th>Precedence Ids</th>
       </tr>
       {% for i in range(0, lenList) %}
@@ -31,6 +32,7 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ system_list[i][2] }}</td>
         <td>{{ system_list[i][3] }}</td>
         <td>{{ system_list[i][5] }}</td>
+        <td>{{ system_list[i][6] }}</td>
       </tr>
       {% endfor %}
     </table>

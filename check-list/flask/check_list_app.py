@@ -39,7 +39,7 @@ from sql_queries import (
 # hashed_password = generate_password_hash("xxxx", method="pbkdf2:sha256")
 # print(hashed_password)
 
-DAYPHASE = 1  # Only this phase Implemented
+# DAYPHASE = 1  # Only this phase Implemented
 
 
 app = Flask(__name__)
@@ -380,10 +380,10 @@ def system_list(
     )
 
 
-@app.route("/list_html/<int:system>/<int:role>")
-@app.route("/list_html/<int:system>/<int:role>/<int:report_id>")
+@app.route("/list_html/<int:phase>/<int:system>/<int:role>")
+@app.route("/list_html/<int:phase>/<int:system>/<int:role>/<int:report_id>")
 @login_required
-def list_html(system, role, report_id=None):
+def list_html(phase, system, role, report_id=None):
     # conn = get_db_connection()
     conn = get_db()
     if report_id is None:
@@ -394,6 +394,7 @@ def list_html(system, role, report_id=None):
     else:
         reportId = report_id
 
+    session["phase"] = phase
     print(f"Last Report Id: {reportId}")
     # if lastShot !=0:
     # reset cursor
@@ -440,20 +441,6 @@ def list_html(system, role, report_id=None):
     if lastOrder is None:
         lastOrder = 0
     print(f"Last item, Order: {lastItem}, {lastOrder}")
-    """
-    cursor = conn.cursor()
-    query = "SELECT * FROM check_missing_items(%s, %s)"
-    cursor.execute(
-        query,
-        (
-            reportId,
-            lastOrder,
-        ),
-    )
-    missing_lines = cursor.fetchall()
-    print(f"missing_lines : {missing_lines}")
-    cursor.close()
-    """
 
     cursor = conn.cursor()
     query = "SELECT * FROM get_signed_items(%s, %s)"
@@ -475,7 +462,7 @@ def list_html(system, role, report_id=None):
         # NEXT_CHECKLINES,
         query,
         (
-            DAYPHASE,
+            phase,
             system,
             role,
             lastOrder,
@@ -531,41 +518,6 @@ def list_html(system, role, report_id=None):
                     failedItems.append(row)
                     print(f"Failed item: {row}")
 
-    """
-    # if nextItems is []:
-    print(
-        f"NEXT_CHECKLINES {nextItems}, len: {len(nextItems)}, cursor.des {cursor.description}"
-    )
-    missingItems = []
-    if len(nextItems) > 0:
-        item2Sign = nextItems[0][0]
-        cursor.close()
-        cursor = conn.cursor()
-        cursor.execute(
-            PRECENDENCE,
-            (item2Sign,),
-        )
-        precendenceItems = cursor.fetchall()
-        for item in precendenceItems:
-            befItem = item[1]
-            cursor.execute(
-                "SELECT COUNT(*) FROM complete WHERE report_id=%s AND item_id=%s",
-                (
-                    reportId,
-                    befItem,
-                ),
-            )
-            if cursor.fetchone()[0] == 0:
-                cursor.close()
-                cursor = conn.cursor()
-                cursor.execute(
-                    MISSING_ITEM,
-                    (befItem,),
-                )
-                missingItems.append(cursor.fetchone())
-        print(f"precendenceItems: {precendenceItems}, missingItems:{missingItems}")
-
-    """
     cursor.close()
 
     # <a href="{{ url_for('edit', id=nextItems[i][0]) }}" class="btn">Edit</a>
@@ -635,31 +587,33 @@ def insert(report_id, item_id, status):
     finally:
         print(f"executed query {cursor.query}")
 
-    # Get Item inserted
-    # print(
-    # "INSERT INTO complete VALUES (NULL, %s, current_timestamp, %s, %s, NULL)"
-    # % (report_id, item_id, status)
-    # )
     cursor.close()
     cursor = conn.cursor()
     try:
-        select_query = "SELECT subsystem_id, role_id FROM item WHERE id = %s"
+        select_query = (
+            "SELECT subsystem_id, day_phase_id, role_id FROM item WHERE id = %s"
+        )
         cursor.execute(select_query, (item_id,))
-        # cursor.execute("SELECT subsystem_id, role_id FROM item WHERE id = %s", (item_id,))
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
         print(f"executed query {cursor.query}")
     item = cursor.fetchone()
     system = item[0]
-    role = item[1]
-    print(f"System: {system}, Role: {role}")
+    phase = item[1]
+    role = item[2]
+    # print(f"System: {system}, Role: {role}")
 
-    # conn.commit()
     cursor.close()
 
-    return redirect(url_for("list_html", system=system, role=role))
-    # return redirect(url_for("list_html", system=system, role=role, shot=shotId))
+    """
+    if "phase" in session:
+        phase = session["phase"]
+    else:
+        phase = 1
+    """
+
+    return redirect(url_for("list_html", system=system, phase=phase, role=role))
 
 
 if __name__ == "__main__":

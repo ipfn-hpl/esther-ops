@@ -13,9 +13,32 @@
     </style>
   </head>
   <body>
-    <h1>Esther Checklist Management (MariaDB)</h1>
+    <h1>Esther Checklist Management Dashboard</h1>
     <h2> Report Id: {{reportId}} </h2>
     <h2> Checklist Signing Tables</h2>
+    <h3> Beginning of the Experimental Run (One or Multiple Shots)</h3>
+    <table>
+      <tr>
+        <th>Role</th>
+        <th>Master List</th>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td>{{ roles[0][1] }}</td>
+        <td>
+          <a href="{{ url_for('list_html', phase=0, system=0, role=roles[0][0], report_id=reportId) }}" class="btn">Master</a>
+        </td>
+      </tr>
+      <tr>
+        <td>{{ roles[1][1] }}</td>
+        <td>
+          <a href="{{ url_for('list_html', phase=0, system=0, role=roles[1][0], report_id=reportId) }}" class="btn">Master</a>
+        </td>
+      </tr>
+    </table>
+    <h3> Shot </h3>
     <table>
       <tr>
         <th>Role</th>
@@ -28,20 +51,40 @@
       <tr>
         <td>{{ rle[1] }}</td>
         <td>
-          <a href="{{ url_for('list_html', system=0, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', phase=1, system=0, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=1, role=rle[0], report_id=reportId) }}" class="btn">Combustion</a>
+          <a href="{{ url_for('list_html', phase=1, system=1, role=rle[0], report_id=reportId) }}" class="btn">Combustion</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=2, role=rle[0], report_id=reportId) }}" class="btn">Vacuum</a>
+          <a href="{{ url_for('list_html', phase=1, system=2, role=rle[0], report_id=reportId) }}" class="btn">Vacuum</a>
         </td>
         <td>
-          <a href="{{ url_for('list_html', system=3, role=rle[0], report_id=reportId) }}" class="btn">Test Gases</a>
+          <a href="{{ url_for('list_html', phase=1, system=3, role=rle[0], report_id=reportId) }}" class="btn">Test Gases</a>
         </td>
       </tr>
       {% endfor %}
     </table>
+    <h3> End of the Experimental Run </h3>
+    <table>
+      <tr>
+        <th>Role</th>
+        <th>Master List</th>
+      </tr>
+      <tr>
+        <td>{{ roles[0][1] }}</td>
+        <td>
+          <a href="{{ url_for('list_html', phase=2, system=0, role=roles[0][0], report_id=reportId) }}" class="btn">Master</a>
+        </td>
+      </tr>
+      <tr>
+        <td>{{ roles[1][1] }}</td>
+        <td>
+          <a href="{{ url_for('list_html', phase=2, system=0, role=roles[1][0], report_id=reportId) }}" class="btn">Master</a>
+        </td>
+      </tr>
+    </table>
+<hr style="height: 3px; background-color: gray; width:98%;">
     <h2> General System Full Lists</h2>
     <table>
       <tr>

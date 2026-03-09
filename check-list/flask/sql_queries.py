@@ -54,13 +54,13 @@ PRECENDENCE = (
 )
 
 MISSING_ITEM = (
-    "SELECT role.short_name, item.id, seq_order, item.name, "
-    "subsystem.name AS System, day_phase.short_name AS Phase "
-    "FROM item "
-    "INNER JOIN subsystem ON subsystem_id = subsystem.id "
-    "INNER JOIN day_phase ON day_phase_id = day_phase.id "
-    "INNER JOIN role ON role_id = role.id "
-    "WHERE item.id = %s"
+    "SELECT r.short_name, i.id, i.seq_order, i.name, "
+    "s.name AS System, d.short_name AS Phase "
+    "FROM item i "
+    "INNER JOIN subsystem s ON i.subsystem_id = s.id "
+    "INNER JOIN day_phase d ON i.day_phase_id = d.id "
+    "INNER JOIN role r ON i.role_id = r.id "
+    "WHERE i.id = %s"
 )
 
 PARAMETERS = "SELECT cc_pressure_sp, he_sp, h2_sp, o2_sp FROM reports WHERE id=%s"

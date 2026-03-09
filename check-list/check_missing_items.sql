@@ -10,9 +10,10 @@ DECLARE
     -- v_cnt INT;
 BEGIN
     FOR rec IN
-        SELECT after_item_id, min_status
-        FROM precedence
-        WHERE item_id = p_item
+        SELECT p.after_item_id, i.min_status
+        FROM precedence p
+        INNER JOIN item i ON p.item_id = i.id
+        WHERE p.item_id = p_item
     LOOP
         -- Run a secondary query per row
         SELECT complete_status_id
