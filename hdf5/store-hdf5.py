@@ -99,13 +99,14 @@ def create_hdf5(args, filename=H5FILE):
             # Create a dataset and store data
             mgroup = f.create_group("raw-data")
             # Multiple intermediate groups can also be created implicitly:
-            ccgroup = f.create_group("raw-data/cc")
-            ccgroup.attrs["description"] = "CC Pressure Kistler Sensor"
+            cc_group = f.create_group("raw-data/cc")
+            cc_group.attrs["description"] = "CC Pressure Kistler Sensor"
             mgroup.create_group("ct")
             mgroup.create_group("st")
             mgroup.create_group("dt")
-            kGroup = ccgroup.create_group("kistler")
+            kGroup = cc_group.create_group("kistler")
             kGroup.attrs["range"] = args.kistler_range  # Bar
+            kGroup.attrs["fill_pressure"] = args.fill_pressure  # Bar
             # kGroup.attrs["range"] = args.kistler_range  # Bar/Volt
             cgroup = f.create_group("cal-data")
             cgroup.create_group("cc")
@@ -273,6 +274,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-k", "--kistler_range", type=float, help="Kistler Range (Bar)", default="200.0"
+    )
+    parser.add_argument(
+        "-l",
+        "--fill_pressure",
+        type=float,
+        help="CC Fill Pressure (Bar)",
+        default="40.0",
     )
     args = parser.parse_args()
 
