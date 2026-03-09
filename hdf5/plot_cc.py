@@ -6,7 +6,7 @@ import argparse
 from read_hdf5 import explore_hdf5, hdf5_file, hdf5_dataset
 
 
-def plot_hdf5_rhode_schwarz(args):
+def plot_both(args):
     """
     Plot a dataset from an HDF5 file
 
@@ -42,40 +42,59 @@ def plot_hdf5_rhode_schwarz(args):
     for key, value in dataset.attrs.items():
         print(f"  {key}: {value}")
     data = dataset[:]
-    plt.figure(figsize=(10, 6))
+    # plt.figure(figsize=(10, 6))
+    fig = plt.figure()
+    gs = fig.add_gridspec(2, hspace=0)
+    axs = gs.subplots(sharex=True)
+    fig.suptitle("kistler Data")
+    """
     if len(data.shape) == 1:
         print(f"data.shape[0] {data.shape[0]}")
-        plt.plot(
+        axs[0].plot(
             # time,
             data * kistler_scale + fill_pressure,
             color="cyan",  # linewidth=2
         )  # alpha=0.5)
         # plt.legend()
     elif len(data.shape) == 2 and data.shape[0] == 2:  # Time and ch1 data
-        print(f"data.shape {data.shape}")
-        plt.plot(
-            data[0],
-            data[1] * kistler_scale + fill_pressure,
-            color="blue",
-        )  # alpha=0.5)
-        # plt.title(f"Plot of {dataset_key}")
-    plt.ylabel("Pressure / Bar")
-    plt.title(f"Plot of {dataset_key}, {exp_id}")
-    plt.xlabel("Time / s")
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
+    """
+    print(f"data.shape {data.shape}")
+    axs[0].plot(
+        data[0],
+        data[1] * kistler_scale + fill_pressure,
+        color="blue",
+    )  # alpha=0.5)
+    # plt.title(f"Plot of {dataset_key}")
+    axs[0].set_ylabel("Pressure / Bar")
+    dataset_key = "red-pitaya"
+    # dataset_path = "raw-data/cc/kistler/rhode-schwarz"
+    try:
+        dataset = kGroup[dataset_key]
+    except KeyError:
+        print(f"object '{dataset_key}' doesn't exist")
+        return
+    print("")
+    print(f"Dataset '{dataset_key}' attributes:")
+    for key, value in dataset.attrs.items():
+        print(f"  {key}: {value}")
+    sampling_rate = dataset.attrs["sampling_rate"]
+    time_offset = dataset.attrs["time_offset"]
+    print(f"  sampling_rate: {sampling_rate}")
+    data = dataset[:]
+    yrange = 2**13
+    print(f"data.shape[0] {data.shape[0]}")
+    time = np.arange(data.shape[0]) / sampling_rate + time_offset
+    axs[1].plot(
+        time,
+        data / yrange,
+        color="red",  # linewidth=2)
+    )  # alpha=0.5)
+    # plt.scatter(time, data / yrange, alpha=0.5)
+    # plt.title(f"Plot of {dataset_key}, {exp_id}")
+    # plt.xlabel("Time / s")
+    # plt.grid(True, alpha=0.3)
+    # plt.tight_layout()
     plt.show()
-
-
-def change_offset_red_pitaya(filename, offset=0.0):
-    """ """
-    # 'r+': Read/write access without deleting existing data.
-    with h5py.File(filename, "r+") as f:
-        # dataset_path = "raw-data/red-pitaya-cc"
-        dataset_path = "raw-data/cc/kistler/red-pitaya"
-        dataset = f[dataset_path]
-        dataset.attrs["time_offset"] = offset
-        f.close()
 
 
 def plot_hdf5_red_pitaya(args):
@@ -126,103 +145,6 @@ def plot_hdf5_red_pitaya(args):
         # plt.legend()
         plt.ylabel("Value")
         plt.title(f"Plot of {dataset_key}, {exp_id}")
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.show()
-
-
-def plot_hdf5_dataset(filename, dataset_path):
-    """
-    Plot a dataset from an HDF5 file
-
-    Parameters:
-    -----------
-    filename : str
-        Path to the HDF5 file
-    dataset_path : str
-       Path to the dataset within the HDF5 file (e.g., '/data' or '/group/dataset')
-    """
-    data = hdf5_dataset(filename, dataset_path)
-    # Create the plot
-    plt.figure(figsize=(10, 6))
-    if len(data.shape) == 1:
-        plt.plot(data)
-        plt.xlabel("Index")
-    elif len(data.shape) == 2:
-        for i in range(min(data.shape[1], 10)):  # Plot up to 10 columns
-            plt.plot(data[:, i], label=f"Column {i}")
-        plt.xlabel("Index")
-        plt.legend()
-    plt.ylabel("Value")
-    plt.title(f"Plot of {dataset_path}")
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_hdf5_dataset2(filename, dataset_path, plot_type="line"):
-    """
-    Plot a dataset from an HDF5 file
-
-    Parameters:
-    -----------
-    filename : str
-        Path to the HDF5 file
-    dataset_path : str
-        Path to the dataset within the HDF5 file (e.g., '/data' or '/group/dataset')
-    plot_type : str
-        Type of plot: 'line', 'scatter', 'imshow', or 'auto'
-    """
-    with h5py.File(filename, "r") as f:
-        # Read the dataset
-        data = f[dataset_path][:]
-        for key, value in mGroup["red-pitaya-cc"].attrs.items():
-            print(f"  {key}: {value}")
-
-        # Determine plot type based on data shape
-        if plot_type == "auto":
-            if len(data.shape) == 1:
-                plot_type = "line"
-            elif len(data.shape) == 2 and min(data.shape) > 10:
-                plot_type = "imshow"
-            else:
-                plot_type = "line"
-
-        # Create the plot
-        plt.figure(figsize=(10, 6))
-
-        if plot_type == "line":
-            if len(data.shape) == 1:
-                plt.plot(data)
-                plt.xlabel("Index")
-            elif len(data.shape) == 2:
-                for i in range(min(data.shape[1], 10)):  # Plot up to 10 columns
-                    plt.plot(data[:, i], label=f"Column {i}")
-                plt.xlabel("Index")
-                plt.legend()
-            plt.ylabel("Value")
-
-        elif plot_type == "scatter":
-            if len(data.shape) == 2 and data.shape[1] >= 2:
-                plt.scatter(data[:, 0], data[:, 1], alpha=0.5)
-                plt.xlabel("Column 0")
-                plt.ylabel("Column 1")
-            else:
-                plt.scatter(range(len(data)), data, alpha=0.5)
-                plt.xlabel("Index")
-                plt.ylabel("Value")
-
-        elif plot_type == "imshow":
-            if len(data.shape) == 2:
-                plt.imshow(data, aspect="auto", cmap="viridis")
-                plt.colorbar(label="Value")
-                plt.xlabel("Column")
-                plt.ylabel("Row")
-            else:
-                print("'imshow' requires 2D data")
-                return
-
-        plt.title(f"Plot of {dataset_path}")
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
         plt.show()
@@ -280,14 +202,10 @@ if __name__ == "__main__":
         print(
             f"File '{args.file_path}' not found. Please provide a valid HDF5 file path."
         )
-    if args.offset != 0.0:
-        change_offset_red_pitaya(args.file_path, args.offset)
     if args.schwarz:
-        plot_hdf5_rhode_schwarz(args)
+        plot_both(args)
     elif args.pitaya:
         plot_hdf5_red_pitaya(args)
-    else:
-        plot_hdf5_dataset(args.file_path, args.dataset_path)
 
     # plot_hdf5_dataset(filename, "/raw-data/red-pitaya-cc", plot_type="line")
     # Plot a specific dataset (modify the path based on your file structure)
