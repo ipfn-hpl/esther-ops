@@ -15,6 +15,7 @@ th { background-color: #4CAF50; color: white; }
   </head>
   <body>
     <h1> {{roleName}}: Esther Checklist Management. Report Id {{reportId}} </h1>
+    <h2> Subystem: {{systemName}} </h2>
     <h2> Parameters: CC_Target:{{parameters[0]}} Bar, SP He/H2/O2: {{parameters[1]}}/{{parameters[2]}}/{{parameters[3]}}</h2>
     <table>
       <tr>
@@ -47,7 +48,7 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ action[1] }}</td>
         <td>{{ action[2] }}</td>
         <td>{{ action[3] }}</td>
-        <td>{{ action[5] }}</td>
+        <td>{{ action[5]|safe }}</td>
         <td>{{ action[4] }}</td>
       </tr>
       {% endfor %}
@@ -88,7 +89,7 @@ th { background-color: #4CAF50; color: white; }
       <tr>
         <td>{{ nextItems[0][0] }}</td>
         <td>{{ nextItems[0][1] }}</td>
-        <td>{{ nextItems[0][2] }}</td>
+        <td>{{ nextItems[0][2]|safe }}</td>
         {% if lenMissing == 0 %}
         <td>
           <a href="{{ url_for('insert', report_id=reportId, item_id=nextItems[0][0], status=0) }}" class="btn">&#9745;&nbsp;OK</a>

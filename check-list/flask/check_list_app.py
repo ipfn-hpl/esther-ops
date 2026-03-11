@@ -31,7 +31,7 @@ from sql_queries import (
     OPERATOR_ROLES,
     PARAMETERS,
     # PRECENDENCE,
-    REPORT_LIST,
+    # REPORT_LIST,
     REPORT_FULL,
     #  SYSTEM_CHECKLIST,
 )
@@ -307,8 +307,10 @@ def report_list(
 ):
     conn = get_db()
     cursor = conn.cursor()
+    query = "SELECT * FROM get_last_reports(%s)"
     cursor.execute(
-        REPORT_LIST,
+        query,
+        # REPORT_LIST,
         (limit,),
     )
     report_list = cursor.fetchall()
@@ -519,6 +521,15 @@ def list_html(phase, system, role, report_id=None):
                     print(f"Failed item: {row}")
 
     cursor.close()
+    cursor = conn.cursor()
+    query = "SELECT name FROM subsystem WHERE id=%s"
+    cursor.execute(
+        # NEXT_CHECKLINES,
+        query,
+        (system,),
+    )
+    systemName = cursor.fetchone()[0]
+    cursor.close()
 
     # <a href="{{ url_for('edit', id=nextItems[i][0]) }}" class="btn">Edit</a>
     # {% for line in nextItems %}
@@ -532,6 +543,7 @@ def list_html(phase, system, role, report_id=None):
         nextItems=nextItems,
         lenNext=len(nextItems),
         roleName=role,
+        systemName=systemName,
         parameters=parameters,
     )
 
