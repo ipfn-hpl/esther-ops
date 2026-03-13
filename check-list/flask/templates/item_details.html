@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Checklist Item </title>
+    <style>
+body { font-family: Arial; margin: 50px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #4CAF50; color: white; }
+.btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+  background-color: #008CBA; color: white; border-radius: 3px; }
+            .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther Checklist Management. Item  details</h1>
+    <h2>Completed Actions in Shot </h2>
+    <table>
+      <tr>
+        <th>Resp</th>
+        <th>Id</th>
+        <th>Order</th>
+        <th>Action</th>
+        <th>Subsystem</th>
+        <th>Day Phase</th>
+      </tr>
+      <tr>
+        <td>{{ item_details[0] }}</td>
+        <td>{{ item_details[1] }}</td>
+        <td>{{ item_details[2] }}</td>
+        <td>{{ item_details[3] }}</td>
+        <td>{{ item_details[4] }}</td>
+        <td>{{ item_details[5] }}</td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -358,17 +358,22 @@ def system_list(
     cursor.close()
     sList = []
     for item in system_list:
+        newItem = []
+        for field in item:
+            newItem.append(field)
         cursor = conn.cursor()
-        print(f"Item: {item}")
         cursor.execute(
             "SELECT after_item_id FROM precedence WHERE item_id=%s",
             (item[0],),
         )
         precedence_list = cursor.fetchall()
-        newItem = []
-        for field in item:
-            newItem.append(field)
-        newItem.append(precedence_list)
+        if precedence_list:
+            # print(f"Item: {item}")
+            lenPrec = len(precedence_list)
+            newItem.append(precedence_list)
+        else:
+            lenPrec = 0
+
         sList.append(newItem)
         cursor.close()
 
@@ -379,6 +384,7 @@ def system_list(
         system=system,
         system_list=sList,
         lenList=len(system_list),
+        lenPrec=lenPrec,
     )
 
 
@@ -626,6 +632,35 @@ def insert(report_id, item_id, status):
     """
 
     return redirect(url_for("list_html", system=system, phase=phase, role=role))
+
+
+@app.route("/item_details")
+@app.route("/item_details/<int:item_id>")
+def item_details(item_id=None):
+    conn = get_db()
+    if item_id is None:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM item ORDER BY id DESC LIMIT 1")
+        item_id = cursor.fetchone()[0]
+        cursor.close()
+
+    cursor = conn.cursor()
+    query = "SELECT * FROM item_details(%s) AS (r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, i_name TEXT, s_name TEXT, d_short_name TEXT);"
+    cursor.execute(
+        query,
+        (item_id,),
+    )
+    item_details = cursor.fetchone()
+    if item_details:
+        lenPrec = len(item_details[5])
+        print(f"Prec: {item_details[5]}, len:{lenPrec}")
+    else:
+        lenPrec = 0
+    return render_template(
+        "item_details.html",
+        lenPrec=lenPrec,
+        item_details=item_details,
+    )
 
 
 if __name__ == "__main__":
