@@ -633,7 +633,11 @@ def item_details(item_id=None):
         cursor.close()
 
     cursor = conn.cursor()
-    query = "SELECT * FROM item_details(%s) AS (r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, i_name TEXT, s_name TEXT, d_short_name TEXT);"
+    query = (
+        "SELECT * FROM item_details(%s) AS "
+        "(d_short_name TEXT, s_name TEXT, r_short_name TEXT, i_id INT, i_seq_order SMALLINT, i_name TEXT)"
+    )
+    # "SELECT * FROM item_details(%s) AS (r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, i_name TEXT, s_name TEXT, d_short_name TEXT);"
     cursor.execute(
         query,
         (item_id,),

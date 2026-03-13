@@ -5,9 +5,7 @@ AS $$
 DECLARE
     result RECORD;
 BEGIN
-    
-    SELECT r.short_name, i.id, i.seq_order, i.name, 
-    s.name AS subsystem_name, d.short_name AS day_phase
+    SELECT d.short_name, s.name, r.short_name, i.id, i.seq_order, i.name
     FROM item i
     INTO result
     INNER JOIN subsystem s ON i.subsystem_id = s.id
@@ -20,4 +18,4 @@ END;
 $$;
 
 -- Must define column types when calling
---SELECT * FROM item_details(4) AS (r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, i_name TEXT, s_name TEXT, d_short_name TEXT);
+--SELECT * FROM item_details(4) AS (d_short_name TEXT, s_name TEXT, r_short_name TEXT, i_id INT,  i_seq_order SMALLINT, i_name TEXT);
