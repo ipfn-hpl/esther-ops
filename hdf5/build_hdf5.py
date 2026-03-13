@@ -1,7 +1,19 @@
+"""
+Here's a Python class for import data in EstherHDF5Handler:
+
+https://github.com/ipfn-hpl/esther-ops/tree/main/hdf5
+
+python3 build_hdf5.py -i -e "S-116" -d "2025-12-23_17-44-44" -k 200
+python3 build_hdf5.py --schwarz -f ~/Documents/Data-files/RS_ControlRoom/S_116/WFM03.CSV
+python3 build_hdf5.py --pitaya -f ../red-pitaya/data-files/S_116/data_file_2025-12-23_17-44-44.csv
+"""
+
 import numpy as np
 from datetime import datetime
 from EstherHDF5Handler import EstherHDF5Handler
 import argparse
+
+H5FILE = "data_with_metadata.h5"
 
 
 def read_csv(filepath):
@@ -61,28 +73,57 @@ def read_csv(filepath):
 
     return time, voltage
 
-def import_hdf5_red(filename, csvfilename, args):
-    #  Update HDF file with R&S csv data
+
+def import_hdf5_red(filename, args):
+    #  Update HDF file with Red pitaya csv data
+    try:
+        t, ch1 = read_csv(args.file_path)
+    except FileNotFoundError:
+        print(f" File: {args.file_path}  not found, existing")
+        return
+
+    data = np.array(ch1, dtype=np.int16)
     with EstherHDF5Handler(filename, mode="a") as h5:
-        t, ch1 = read_csv(csvfilename)
-        data = np.array(signal, dtype=np.int16)
-        #data = np.array([t, ch1], dtype=np.float32)
-        # data = np.random.rand(100, 100).astype(np.float32)
         h5.create_dataset(
             "raw-data/cc/kistler/red-pitaya",
             data=data,
             attrs={
                 "unit": "lsb",
                 "channels": 1,
+                "has_time": False,
                 "sampling_rate": 125.0e6 / 16,  # Hz
                 "time_offset": 0.0,
                 # "sensor_id": 42,
             },
+            compression="gzip",
         )
 
-def import_hdf5_schwarz(filename, csvfilename):
+
+def import_hdf5_schwarz(filename, args):
+    try:
+        t, ch1 = read_csv(args.file_path)
+    except FileNotFoundError:
+        print(f" File: {args.file_path}  not found, existing")
+        return
+    data = np.array([t, ch1], dtype=np.float32)
     #  Update HDF file with R&S csv data
     with EstherHDF5Handler(filename, mode="a") as h5:
+        h5.create_dataset(
+            "raw-data/cc/kistler/rhode-schwarz",
+            data=data,
+            attrs={
+                "unit": "volt",
+                "channels": 1,
+                "has_time": True,
+            },
+            compression="gzip",
+        )
+
+
+# def import_hdf5_schwarz(filename, csvfilename):
+#  Update HDF file with R&S csv data
+# with EstherHDF5Handler(filename, mode="a") as h5:
+
 
 def init_hdf5(filename, args):
     with EstherHDF5Handler(filename, mode="w-") as h5:
@@ -95,7 +136,8 @@ def init_hdf5(filename, args):
                 "@version": "1.0",
                 "@author": "Bernardo",
                 "experiment": {
-                    "@date": args.shot_date",
+                    "@date": args.shot_date,
+                    "@name": args.experiment_name,
                     "@fill_pressure": args.fill_pressure,  # Bar
                     "readings": [1.0, 2.0, 3.0, 4.0],
                 },
@@ -157,7 +199,7 @@ if __name__ == "__main__":
         default="40.0",
     )
     args = parser.parse_args()
-    filename = "data_with_metadata.h5"
+    filename = H5FILE
     # data_dir = Path.cwd()
     # file = filename + ".h5"
     # file_path = data_dir / file
@@ -176,10 +218,6 @@ if __name__ == "__main__":
             # explore_hdf5(file_path)
     elif args.init:
         init_hdf5(filename, args)
-        # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
-        # f.attrs["created_date"] = "2025-12-23_17-44-44"  # str(datetime.now())
-        # f.attrs["shot_date"] = args.shot_date  # "2024-12-26_18-01-03"
-        # .attrs["experiment_name"] = args.experiment_name
     if args.pitaya:
         print("pitaya:")
         import_hdf5_red(filename, args)
