@@ -15,7 +15,7 @@ th { background-color: #4CAF50; color: white; }
   <body>
     <h1> Esther Checklist: {{system_list[0][4]}}. Phase: {{phase}} </h1>
     <h2>Actions</h2>
-    {% if lenList > 0 %}
+    {% if system_list |length > 0 %}
     <table>
       <tr>
         <th>ID</th>
@@ -25,17 +25,23 @@ th { background-color: #4CAF50; color: white; }
         <th>Min Status</th>
         <th>Precedence Ids</th>
       </tr>
-      {% for i in range(0, lenList) %}
+      {% for system in system_list %}
       <tr>
-        <td>{{ system_list[i][0] }}</td>
-        <td>{{ system_list[i][1] }}</td>
-        <td>{{ system_list[i][2]|safe}}</td>
-        <td>{{ system_list[i][3] }}</td>
-        <td>{{ system_list[i][5] }}</td>
-        <td>{{ system_list[i][6] }}</td>
+        <td>{{ system[0] }}</td>
+        <td>{{ system[1] }}</td>
+        <td>{{ system[2]|safe}}</td>
+        <td>{{ system[3] }}</td>
+        <td>{{ system[5] }}</td>
+        <td>
+        {% for pItem in system[6] %}
+    <a href="{{ url_for('item_details', item_id=pItem[0]) }}">{{ pItem[0] }} </a>
+        {% endfor %}
+        </td>
       </tr>
       {% endfor %}
     </table>
+    {% else %}
+    <p>No items found.</p>
     {% endif %}
 
   </body>

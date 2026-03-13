@@ -327,7 +327,6 @@ def report_list(
         cursor.close()
     print(f"timeD: {timeDate}")
 
-    # print(f"report_list: {report_list}")
     return render_template(
         "report_list.html",
         report_list=report_list,
@@ -343,12 +342,6 @@ def system_list(
 ):
     conn = get_db()
     cursor = conn.cursor()
-    """
-    cursor.execute(
-        SYSTEM_CHECKLIST,
-        (phase, system),
-    )
-    """
     query = "SELECT * FROM get_system_list(%s, %s)"
     cursor.execute(
         query,
@@ -369,10 +362,7 @@ def system_list(
         precedence_list = cursor.fetchall()
         if precedence_list:
             # print(f"Item: {item}")
-            lenPrec = len(precedence_list)
             newItem.append(precedence_list)
-        else:
-            lenPrec = 0
 
         sList.append(newItem)
         cursor.close()
@@ -383,8 +373,6 @@ def system_list(
         phase=phase,
         system=system,
         system_list=sList,
-        lenList=len(system_list),
-        lenPrec=lenPrec,
     )
 
 
