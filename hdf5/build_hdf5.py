@@ -91,8 +91,9 @@ def import_hdf5_red(filename, args):
                 "unit": "lsb",
                 "channels": 1,
                 "has_time": False,
-                "sampling_rate": 125.0e6 / 16,  # Hz
-                "time_offset": 0.0,
+                "sampling_rate": 125.0e6,  # Hz
+                "decimation": 16,
+                "time_offset": args.time_offset,
                 # "sensor_id": 42,
             },
             compression="gzip",
@@ -197,6 +198,13 @@ if __name__ == "__main__":
         type=float,
         help="CC Fill Pressure (Bar)",
         default="40.0",
+    )
+    parser.add_argument(
+        "-t",
+        "--time_offset",
+        type=float,
+        help="RedPitaya time Offset to R&S",
+        default="0.0",
     )
     args = parser.parse_args()
     filename = H5FILE
