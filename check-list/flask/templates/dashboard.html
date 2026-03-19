@@ -70,12 +70,16 @@
       <tr>
         <th>Role</th>
         <th>Master List</th>
+        <th>Combustion</th>
       </tr>
       {% for rle in roles %}
       <tr>
         <td>{{ rle[1] }}</td>
         <td>
           <a href="{{ url_for('list_html', phase=2, system=0, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
+        </td>
+        <td>
+          <a href="{{ url_for('list_html', phase=2, system=1, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
         </td>
       </tr>
       {% endfor %}

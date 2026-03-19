@@ -121,7 +121,6 @@ def report(report_id=None):
     query = "SELECT * FROM get_complete_report(%s)"
     cursor.execute(
         query,
-        # REPORT_FULL,
         (reportId,),
     )
     completed = cursor.fetchall()
@@ -219,9 +218,8 @@ def register():
         o2_sp = request.form["o2_sp"]
 
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT id FROM reports WHERE series_name='S' AND id=%s", (reportId,)
-        )
+        # "SELECT id FROM reports WHERE series_name='S' AND id=%s", (reportId,)
+        cursor.execute("SELECT id FROM reports WHERE id=%s", (reportId,))
         report_exist = cursor.fetchone()
         cursor.close()
 
@@ -301,7 +299,6 @@ def report_list(
     query = "SELECT * FROM get_last_reports(%s)"
     cursor.execute(
         query,
-        # REPORT_LIST,
         (limit,),
     )
     report_list = cursor.fetchall()
@@ -407,17 +404,6 @@ def list_html(phase, system, role, report_id=None):
     )
     # lastComplete = cursor.fetchone()
     lastItem, lastOrder = cursor.fetchone()
-    """
-    print(f"lastComplete : {lastComplete}")
-    if lastComplete is None:
-        print("No completed items. ")
-        lastItem = 0
-        lastOrder = 0
-        # return redirect(url_for("index"))
-    else:
-        lastItem = lastComplete[0]
-        lastOrder = lastComplete[1]
-    """
     cursor.close()
     cursor = conn.cursor()
     cursor.execute(
@@ -498,7 +484,6 @@ def list_html(phase, system, role, report_id=None):
                         "i_name TEXT, s_name TEXT, d_short_name TEXT)"
                     )
                     cursor.execute(
-                        # MISSING_ITEM,
                         query,
                         (row[0],),
                     )
