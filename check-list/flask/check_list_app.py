@@ -15,31 +15,16 @@ from werkzeug.security import check_password_hash  # generate_password_hash,
 from functools import wraps
 from datetime import timedelta
 
-# import mariadb
 import psycopg2
 import psycopg2.extras
 import sys
 # import os
 
-# import Secrets
+# Import Secrets
 from config_psql import DB_CONFIG
-from sql_queries import (
-    # LAST_CHECKED,
-    # LAST_CHECKLINES,
-    # MISSING_ITEM,
-    # NEXT_CHECKLINES,
-    OPERATOR_ROLES,
-    PARAMETERS,
-    # PRECENDENCE,
-    # REPORT_LIST,
-    REPORT_FULL,
-    #  SYSTEM_CHECKLIST,
-)
 # from werkzeug.security import  generate_password_hash
 # hashed_password = generate_password_hash("xxxx", method="pbkdf2:sha256")
 # print(hashed_password)
-
-# DAYPHASE = 1  # Only this phase Implemented
 
 
 app = Flask(__name__)
@@ -92,7 +77,6 @@ def home():
 
         flash(f"Welcome to Esther CheckLists. {session['username']}!")
         return f'Welcome to Esther CheckLists, {session["username"]}! <a href="/dashboard">Dashboard</a> | <a href="/logout">Logout</a>'
-        # return redirect(url_for("dashboard"))
     # return 'Welcome to ESTHER! Please <a href="/login">Login</a>'
     # return 'Welcome! <a href="/login">Login</a> | <a href="/register">Register</a>'
 
@@ -134,8 +118,10 @@ def report(report_id=None):
         reportId = report_id
 
     cursor = conn.cursor()
+    query = "SELECT * FROM get_complete_report(%s)"
     cursor.execute(
-        REPORT_FULL,
+        query,
+        # REPORT_FULL,
         (reportId,),
     )
     completed = cursor.fetchall()
@@ -179,8 +165,10 @@ def login():
                 cursor.close()
                 cursor = conn.cursor()
                 user_id = account[0]
+                query = "SELECT * FROM get_operator_roles(2)"
                 cursor.execute(
-                    OPERATOR_ROLES,
+                    query,
+                    # OPERATOR_ROLES,
                     (user_id,),
                 )
                 rls = cursor.fetchall()
@@ -214,12 +202,14 @@ def register():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, shot FROM reports WHERE series_name IN ('S', 'E')  ORDER BY id DESC LIMIT 1"
+        "SELECT id, shot FROM reports WHERE series_name IN ('S', 'H')  ORDER BY id DESC LIMIT 1"
     )
-    last = cursor.fetchone()
-    report_id = int(last[0])
-    shot = last[1]
-    print(f"Last Id: {report_id}, Shot: {shot},")
+    rec = cursor.fetchone()
+    if rec:
+        # last = cursor.fetchone()
+        report_id = int(rec[0])
+        shot = rec[1]
+        print(f"Last Id: {report_id}, Shot: {shot},")
     cursor.close()
     if request.method == "POST":
         reportId = request.form["reportId"]
@@ -235,7 +225,6 @@ def register():
         report_exist = cursor.fetchone()
         cursor.close()
 
-        #    cursor.execute(
         cursor = conn.cursor()
         if report_exist:
             flash("Shot already Exist")
@@ -278,7 +267,7 @@ def register():
             O2_sp <input type="number" id="He_sp" name="O2_sp" value="1.2" min="0.2" max="3.0" step="0.1" ><br>
             <button type="submit">Register</button><br/>
             <a href={{ url_for('dashboard', reportId=report_id) }}>Dashboard / Login</a><br/>
-            <a href={{ url_for('report', shot_id=report_id) }}>Last Shot Report</a>
+            <a href={{ url_for('report', report_id=report_id) }}>Last Shot Report</a>
         </form>
     """
     return render_template_string(form_html, shot=shot, shot_id=report_id)
@@ -293,7 +282,9 @@ def dashboard(report_id=None):
     if report_id is None:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM reports ORDER BY id DESC LIMIT 1")
-        reportId = cursor.fetchone()[0]
+        rec = cursor.fetchone()
+        if rec:
+            reportId = rec[0]
         cursor.close()
     else:
         reportId = report_id
@@ -323,7 +314,9 @@ def report_list(
             "SELECT time_date FROM complete WHERE report_id=%s ORDER BY time_date ASC LIMIT 1",
             (rprt[0],),
         )
-        timeDate.append(cursor.fetchone()[0])
+        rec = cursor.fetchone()
+        if rec:
+            timeDate.append(rec[0])
         cursor.close()
     print(f"timeD: {timeDate}")
 
@@ -395,7 +388,8 @@ def list_html(phase, system, role, report_id=None):
     # if lastShot !=0:
     # reset cursor
     cursor = conn.cursor()
-    cursor.execute(PARAMETERS, (reportId,))  # ,
+    query = "SELECT cc_pressure_sp, he_sp, h2_sp, o2_sp FROM reports WHERE id=%s"
+    cursor.execute(query, (reportId,))  # ,
     parameters = cursor.fetchone()
     # print(f"roleName : {role}:{roleName}")
 
@@ -508,7 +502,9 @@ def list_html(phase, system, role, report_id=None):
                         query,
                         (row[0],),
                     )
-                    missingItems.append(cursor.fetchone())
+                    rec = cursor.fetchone()
+                    if rec:
+                        missingItems.append(rec)
                     cursor.close()
                 elif row[2] != 0:
                     failedItems.append(row)
@@ -552,19 +548,21 @@ def attention(report_id, item_id):
         "SELECT subsystem_id,role_id,name FROM item WHERE id = %s",
         (item_id,),
     )
-    item = cursor.fetchone()
-    system_id = item[0]
-    role_id = item[1]
-    name = item[2]
-    print(f"System: {system_id}, Role: {role_id}")
-    return render_template(
-        "attention.html",
-        name=name,
-        report_id=report_id,
-        item_id=item_id,
-        system_id=system_id,
-        role_id=role_id,
-    )
+    rec = cursor.fetchone()
+    if rec:
+        # item = rec
+        system_id = rec[0]
+        role_id = rec[1]
+        name = rec[2]
+        print(f"System: {system_id}, Role: {role_id}")
+        return render_template(
+            "attention.html",
+            name=name,
+            report_id=report_id,
+            item_id=item_id,
+            system_id=system_id,
+            role_id=role_id,
+        )
 
 
 # INSERT: Complete Action Status
@@ -604,20 +602,14 @@ def insert(report_id, item_id, status):
         print(f"An error occurred: {e}")
     finally:
         print(f"executed query {cursor.query}")
-    item = cursor.fetchone()
-    system = item[0]
-    phase = item[1]
-    role = item[2]
+    rec = cursor.fetchone()
+    if rec:
+        system = rec[0]
+        phase = rec[1]
+        role = rec[2]
     # print(f"System: {system}, Role: {role}")
 
     cursor.close()
-
-    """
-    if "phase" in session:
-        phase = session["phase"]
-    else:
-        phase = 1
-    """
 
     return redirect(url_for("list_html", system=system, phase=phase, role=role))
 
