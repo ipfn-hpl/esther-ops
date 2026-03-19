@@ -110,7 +110,7 @@ def import_hdf5_schwarz(filename, args):
     #  Update HDF file with R&S csv data
     with EstherHDF5Handler(filename, mode="a") as h5:
         h5.create_dataset(
-            "raw-data/cc/kistler/rhode-schwarz",
+            "raw-data/cc/kistler/rohde-schwarz",
             data=data,
             attrs={
                 "unit": "volt",
@@ -127,44 +127,47 @@ def import_hdf5_schwarz(filename, args):
 
 
 def init_hdf5(filename, args):
-    with EstherHDF5Handler(filename, mode="w-") as h5:
-        h5.import_from_dict(
-            {
-                "@title": "Esther ST Experiment Data",
-                "@institution": "IPFN-HPL Lab",
-                "@created_date": str(datetime.now()),
-                # "@institution" = ""
-                "@version": "1.0",
-                "@author": "Bernardo",
-                "experiment": {
-                    "@date": args.shot_date,
-                    "@name": args.experiment_name,
-                    "@fill_pressure": args.fill_pressure,  # Bar
-                    "readings": [1.0, 2.0, 3.0, 4.0],
-                },
-                "raw-data": {
-                    "@description": "Raw Data from instruments in binary",
-                    "cc": {
-                        "@description": "Combustion Chamber",
-                        "kistler": {
-                            "@description": "CC Pressure Kistler Sensor",
-                            "@range": args.kistler_range,  # Bar
+    try:
+        with EstherHDF5Handler(filename, mode="w-") as h5:
+            h5.import_from_dict(
+                {
+                    "@title": "Esther ST Experiment Data",
+                    "@institution": "IPFN-HPL Lab",
+                    "@created_date": str(datetime.now()),
+                    # "@institution" = ""
+                    "@version": "1.0",
+                    "@author": "Bernardo",
+                    "experiment": {
+                        "@date": args.shot_date,
+                        "@name": args.experiment_name,
+                        "@fill_pressure": args.fill_pressure,  # Bar
+                        "readings": [1.0, 2.0, 3.0, 4.0],
+                    },
+                    "raw-data": {
+                        "@description": "Raw Data from instruments in binary",
+                        "cc": {
+                            "@description": "Combustion Chamber",
+                            "kistler": {
+                                "@description": "CC Pressure Kistler Sensor",
+                                "@range": args.kistler_range,  # Bar
+                            },
                         },
+                        "ct": {
+                            "@description": "Compression Tube Section",
+                        },
+                        "st": {
+                            "@description": "Shock Tube Section",
+                        },
+                        "dt": {
+                            "@description": "Dump Tank Section",
+                        },
+                        # "readings": [1.0, 2.0, 3.0, 4.0],
                     },
-                    "ct": {
-                        "@description": "Compression Tube Section",
-                    },
-                    "st": {
-                        "@description": "Shock Tube Section",
-                    },
-                    "dt": {
-                        "@description": "Dump Tank Section",
-                    },
-                    # "readings": [1.0, 2.0, 3.0, 4.0],
-                },
-                "cal-data": {},
-            }
-        )
+                    "cal-data": {},
+                }
+            )
+    except FileExistsError:
+        print(f"File: {filename} already exists. Please delete it first")
 
 
 if __name__ == "__main__":
@@ -181,7 +184,7 @@ if __name__ == "__main__":
         "-p", "--pitaya", action="store_true", help="Update with RedPitaya "
     )
     parser.add_argument(
-        "-s", "--schwarz", action="store_true", help="Update with Rhode-Schwarz CSV"
+        "-s", "--schwarz", action="store_true", help="Update with Rohde-Schwarz CSV"
     )
     parser.add_argument(
         "-e", "--experiment_name", type=str, help="Experiment Name", default="S-117"

@@ -71,6 +71,36 @@ class EstherHDF5Handler:
         """Get dataset as numpy array."""
         return self.file[name][:]
 
+    def get_rohde_schwarz_data(self, name: str) -> np.ndarray:
+        """Get dataset as numpy array."""
+
+        rs_key = "raw-data/cc/kistler/rohde-schwarz"
+        fill_pressure = self.get_attr("fill_pressure", "experiment")
+        print(f"fill_pressure: {fill_pressure} Bar")
+        kistler_range = self.get_attr("range", "raw-data/cc/kistler")
+        kistler_scale = kistler_range / 10.0  # Bar per Volt
+        data = self.get_dataset(rs_key)
+        data[1] = (data[1] * kistler_scale + fill_pressure,)
+        return data
+
+    def get_red_pitaya_data(self, name: str) -> np.ndarray:
+        """Get dataset as numpy array."""
+
+        rp_key = "raw-data/cc/kistler/red-pitaya"
+        fill_pressure = self.get_attr("fill_pressure", "experiment")
+        print(f"fill_pressure: {fill_pressure} Bar")
+        kistler_range = self.get_attr("range", "raw-data/cc/kistler")
+        # kistler_scale = kistler_range / 10.0  # Bar per Volt
+        print(f"Dict: {self.get_dataset_info(rp_key)}")
+        sampling_rate = self.get_attr("sampling_rate", rp_key)
+        decimation = self.get_attr("decimation", rp_key)
+        time_offset = self.get_attr("time_offset", rp_key)
+        yrange = 2**13
+        ch1 = self.get_dataset(rp_key) / yrange
+        time = np.arange(ch1.shape[0]) / (sampling_rate / decimation) + time_offset
+        data = np.array([time, ch1], dtype=np.float32)
+        return data
+
     def get_binary_data(self, name: str) -> bytes:
         """Get dataset as raw binary data."""
         return self.file[name][:].tobytes()

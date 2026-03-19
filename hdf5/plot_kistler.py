@@ -20,7 +20,7 @@ def plot_kistler(estherHdf5):
     gs = fig.add_gridspec(2, hspace=0)
     axs = gs.subplots(sharex=True)
     fig.suptitle("Kistler Data")
-    rs_key = "raw-data/cc/kistler/rhode-schwarz"
+    rs_key = "raw-data/cc/kistler/rohde-schwarz"
     data = estherHdf5.get_dataset(rs_key)
     axs[0].plot(
         data[0],
@@ -62,12 +62,12 @@ if __name__ == "__main__":
         "--dataset_path",
         type=str,
         help="Dataset plot to plot",
-        default="/raw-data/rhode-schwarz-cc",
+        default="/raw-data/rohde-schwarz-cc",
     )
     parser.add_argument("-e", "--explore", action="store_true", help="Explore hdf5")
     parser.add_argument("-p", "--pitaya", action="store_true", help="Plot RedPitaya ")
     parser.add_argument(
-        "-s", "--schwarz", action="store_true", help="Plot with Rhode-Schwarz CSV"
+        "-s", "--schwarz", action="store_true", help="Plot with rohde-Schwarz CSV"
     )
     parser.add_argument(
         "-m",
