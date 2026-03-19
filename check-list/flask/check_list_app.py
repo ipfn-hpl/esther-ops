@@ -165,7 +165,7 @@ def login():
                 cursor.close()
                 cursor = conn.cursor()
                 user_id = account[0]
-                query = "SELECT * FROM get_operator_roles(2)"
+                query = "SELECT * FROM get_operator_roles(%s)"
                 cursor.execute(
                     query,
                     # OPERATOR_ROLES,
