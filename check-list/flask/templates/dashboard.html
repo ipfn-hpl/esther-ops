@@ -25,18 +25,14 @@
         <td>&nbsp;</td>
         <td>&nbsp;</td>
       </tr>
+      {% for rle in roles %}
       <tr>
-        <td>{{ roles[0][1] }}</td>
+        <td>{{ rle[1] }}</td>
         <td>
-          <a href="{{ url_for('list_html', phase=0, system=0, role=roles[0][0], report_id=reportId) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', phase=0, system=0, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
         </td>
       </tr>
-      <tr>
-        <td>{{ roles[1][1] }}</td>
-        <td>
-          <a href="{{ url_for('list_html', phase=0, system=0, role=roles[1][0], report_id=reportId) }}" class="btn">Master</a>
-        </td>
-      </tr>
+      {% endfor %}
     </table>
     <h3> Main Shot Sequence </h3>
     <table>
@@ -75,18 +71,14 @@
         <th>Role</th>
         <th>Master List</th>
       </tr>
+      {% for rle in roles %}
       <tr>
-        <td>{{ roles[0][1] }}</td>
+        <td>{{ rle[1] }}</td>
         <td>
-          <a href="{{ url_for('list_html', phase=2, system=0, role=roles[0][0], report_id=reportId) }}" class="btn">Master</a>
+          <a href="{{ url_for('list_html', phase=2, system=0, role=rle[0], report_id=reportId) }}" class="btn">Master</a>
         </td>
       </tr>
-      <tr>
-        <td>{{ roles[1][1] }}</td>
-        <td>
-          <a href="{{ url_for('list_html', phase=2, system=0, role=roles[1][0], report_id=reportId) }}" class="btn">Master</a>
-        </td>
-      </tr>
+      {% endfor %}
     </table>
 <hr style="height: 3px; background-color: gray; width:98%;">
     <h2> General System Full Lists</h2>
