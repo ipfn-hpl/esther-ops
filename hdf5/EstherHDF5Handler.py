@@ -71,7 +71,14 @@ class EstherHDF5Handler:
         """Get dataset as numpy array."""
         return self.file[name][:]
 
-    def get_rohde_schwarz_data(self, name: str) -> np.ndarray:
+    def change_offset_red_pitaya(self, offset: float):
+        """ """
+        rp_key = "raw-data/cc/kistler/red-pitaya"
+        dataset = self.file[rp_key]
+        dataset.attrs["time_offset"] = offset
+        self.close()
+
+    def get_rohde_schwarz_data(self) -> np.ndarray:
         """Get dataset as numpy array."""
 
         rs_key = "raw-data/cc/kistler/rohde-schwarz"
@@ -80,10 +87,11 @@ class EstherHDF5Handler:
         kistler_range = self.get_attr("range", "raw-data/cc/kistler")
         kistler_scale = kistler_range / 10.0  # Bar per Volt
         data = self.get_dataset(rs_key)
-        data[1] = (data[1] * kistler_scale + fill_pressure,)
+        data[1] *= kistler_scale
+        data[1] += fill_pressure
         return data
 
-    def get_red_pitaya_data(self, name: str) -> np.ndarray:
+    def get_red_pitaya_data(self) -> np.ndarray:
         """Get dataset as numpy array."""
 
         rp_key = "raw-data/cc/kistler/red-pitaya"
