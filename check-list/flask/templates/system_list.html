@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Flask ESTHER Checklist </title>
+    {% if system_list |length > 0 %}
+      <title> {{phase}} {{system_list[0][4]}} Full Checklist </title>
+    {% else %}
+      <title> {{phase}} Full Checklist </title>
+    {% endif %}
     <style>
 body { font-family: Arial; margin: 50px; }
 table { border-collapse: collapse; width: 100%; }

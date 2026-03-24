@@ -514,11 +514,12 @@ def list_html(phase, system, role, report_id=None):
         reportItems=reportItems,
         completed=completed,
         missingItems=missingItems,
-        lenMissing=len(missingItems),
+        # lenMissing=len(missingItems),
         nextItems=nextItems,
-        lenNext=len(nextItems),
+        # lenNext=len(nextItems),
         roleName=role,
         systemName=systemName,
+        phase=phase,
         parameters=parameters,
     )
 
