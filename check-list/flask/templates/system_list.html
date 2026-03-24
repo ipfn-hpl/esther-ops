@@ -4,7 +4,7 @@
     {% if system_list |length > 0 %}
       <title> {{phase}} {{system_list[0][4]}} Full Checklist </title>
     {% else %}
-      <title> {{phase}} Full Checklist </title>
+      <title> {{phase}} Empty Checklist </title>
     {% endif %}
     <style>
 body { font-family: Arial; margin: 50px; }
@@ -18,8 +18,8 @@ th { background-color: #4CAF50; color: white; }
   </head>
   <body>
     {% if system_list |length > 0 %}
-    <h1> Esther Checklist: {{system_list[0][4]}}. Phase: {{phase}} </h1>
-    <h2>Actions</h2>
+    <h1> Esther Phase: {{phase}}; Checklist: {{system_list[0][4]}}.</h1>
+    <h2>Complete List of Actions:</h2>
     <table>
       <tr>
         <th>ID</th>
@@ -38,15 +38,14 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ system[5] }}</td>
         <td>
         {% for pItem in system[6] %}
-    <a href="{{ url_for('item_details', item_id=pItem[0]) }}">{{ pItem[0] }} </a>
+        <a href="{{ url_for('item_details', item_id=pItem[0]) }}"> {{ pItem[0] }}</a>&nbsp;
         {% endfor %}
         </td>
       </tr>
       {% endfor %}
     </table>
     {% else %}
-    <p>No items found in this Checklis.</p>
+    <p>No items found in this Checklist.</p>
     {% endif %}
-
   </body>
 </html>
