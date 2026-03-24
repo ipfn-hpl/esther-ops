@@ -1,7 +1,8 @@
-import h5py
+# import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import sys
 
 from pathlib import Path
 
@@ -23,11 +24,16 @@ def explore_hdf5(eHdf5):
 
 def plot_kistler(estherHdf5):
     fig = plt.figure()
-    gs = fig.add_gridspec(2, hspace=0)
+    gs = fig.add_gridspec(2, hspace=0.1)
     axs = gs.subplots(sharex=True)
-    fig.suptitle("CC Kistler Data")
+    name = estherHdf5.get_attr("name", "experiment")
+    date = estherHdf5.get_attr("date", "experiment")
+    fig.suptitle(f"CC Kistler Data Shot: {name} Date: {date}")
     try:
         data = estherHdf5.get_rohde_schwarz_data()
+        index = np.argmax(data[1])
+        timeMaxRS = data[0][index]
+        print(f" schwarz max index {index}, time: {timeMaxRS}")
         axs[0].set_title("Rohde-Schwarz Oscilloscope", fontsize="small", loc="right")
         axs[0].plot(
             data[0],
@@ -40,12 +46,18 @@ def plot_kistler(estherHdf5):
         print("object 'raw-data/cc/kistler/rohde-schwarz' doesn't exist in dataset")
     try:
         data = estherHdf5.get_red_pitaya_data()
+        index = np.argmax(data[1])
+        timeMaxRP = data[0][index]
+        print(f"pitaya max index {index}, time: {timeMaxRP}")
+        timeOffSet = timeMaxRS - timeMaxRP
+        print(f"pitaya TimeOffset  {timeOffSet} ms ")
+        print
         axs[1].plot(
             data[0],
             data[1],
             color="red",
         )  # alpha=0.5)
-        axs[1].set_title("Red Pitaya Data", fontsize="small", loc="left")
+        axs[1].set_title("Red Pitaya ADC Ch1", fontsize="small", loc="right")
         axs[1].grid()
     except KeyError:
         print("object 'red-pitaya' doesn't exist in dataset")
@@ -108,27 +120,27 @@ if __name__ == "__main__":
 
     # First, explore the structure
     try:
-        if args.offset != 1.0e27:
-            # 'r+': Read/write access without deleting existing data.
-            with EstherHDF5Handler(args.file_path, mode="r+") as h5:
-                h5.change_offset_red_pitaya(args.offset)
-                h5.close()
-        elif args.afs:
+        if args.afs:
             path = Path("/afs/ist.utl.pt/groups/esther/HDF5")
             new_path = path.joinpath(str(args.reportId))
             # print(f"new_path {new_path}")
             file_path = new_path.joinpath("data_with_metadata.h5")
-            print(f"Opening {file_path}")
-            with EstherHDF5Handler(file_path, mode="r") as h5:
-                explore_hdf5(h5)
-                plot_kistler(h5)
-
-        elif args.explore:
-            with EstherHDF5Handler(args.file_path, mode="r") as h5:
-                explore_hdf5(h5)
         else:
-            plot_kistler(h5)
-        # explore_hdf5(args.file_path)
+            file_path = args.file_path
+
+        if args.offset != 1.0e27:
+            # 'r+': Read/write access without deleting existing data.
+            with EstherHDF5Handler(file_path, mode="r+") as h5:
+                h5.change_offset_red_pitaya(args.offset)
+                h5.close()
+            # sys.exit()
+        else:
+            with EstherHDF5Handler(file_path, mode="r") as h5:
+                if args.explore:
+                    explore_hdf5(h5)
+                else:
+                    plot_kistler(h5)
+                # explore_hdf5(args.file_path)
     except FileNotFoundError:
         print(
             f"File '{args.file_path}' not found. Please provide a valid HDF5 file path."
