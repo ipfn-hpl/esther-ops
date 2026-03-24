@@ -99,7 +99,7 @@
       <tr>
         <td>Start of Day</td>
         <td><a href="{{ url_for('system_list', phase=0, system=0) }}" class="btn" target="_blank">List</a></td>
-        <td></td>
+        <td><a href="{{ url_for('system_list', phase=0, system=1) }}" class="btn" target="_blank">List</a></td>
         <td></td>
       </tr>
       <tr>
@@ -114,6 +114,7 @@
       <tr>
         <td>End of the Experimental Run</td>
         <td><a href="{{ url_for('system_list', phase=2, system=0) }}" class="btn" target="_blank">List</a></td>
+        <td><a href="{{ url_for('system_list', phase=2, system=1) }}" class="btn" target="_blank">List</a></td>
         <td></td>
         <td></td>
       </tr>

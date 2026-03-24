@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Flask ESTHER Checklist {{system_list[0][4]}}</title>
+    <title>Flask ESTHER Checklist </title>
     <style>
 body { font-family: Arial; margin: 50px; }
 table { border-collapse: collapse; width: 100%; }
@@ -13,9 +13,9 @@ th { background-color: #4CAF50; color: white; }
     </style>
   </head>
   <body>
+    {% if system_list |length > 0 %}
     <h1> Esther Checklist: {{system_list[0][4]}}. Phase: {{phase}} </h1>
     <h2>Actions</h2>
-    {% if system_list |length > 0 %}
     <table>
       <tr>
         <th>ID</th>
@@ -41,7 +41,7 @@ th { background-color: #4CAF50; color: white; }
       {% endfor %}
     </table>
     {% else %}
-    <p>No items found.</p>
+    <p>No items found in this Checklis.</p>
     {% endif %}
 
   </body>
