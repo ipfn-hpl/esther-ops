@@ -381,7 +381,7 @@ def list_html(phase, system, role, report_id=None):
         reportId = report_id
 
     session["phase"] = phase
-    print(f"Last Report Id: {reportId}")
+    print(f"Last Report Id: {reportId} Phase: {phase}")
     # if lastShot !=0:
     # reset cursor
     cursor = conn.cursor()
@@ -392,12 +392,13 @@ def list_html(phase, system, role, report_id=None):
 
     cursor.close()
     cursor = conn.cursor()
-    query = "SELECT * FROM last_signed(%s,%s,%s)"
+    query = "SELECT item_id, seq_order FROM last_signed(%s,%s,%s,%s)"
     cursor.execute(
         # LAST_CHECKED,
         query,
         (
             reportId,
+            phase,
             system,
             role,
         ),
@@ -406,17 +407,15 @@ def list_html(phase, system, role, report_id=None):
     lastItem, lastOrder = cursor.fetchone()
     cursor.close()
     cursor = conn.cursor()
+    if lastOrder is None:
+        lastOrder = 0
+    print(f"Last item, {lastItem}, Order: {lastOrder}")
     cursor.execute(
         "SELECT id, shot, chief_engineer_id, researcher_id, cc_pressure_sp, he_sp, h2_sp, o2_sp FROM reports WHERE id = %s",
         (reportId,),
     )
     reportItems = cursor.fetchall()
     cursor.close()
-    if lastOrder is None:
-        lastOrder = 0
-    if lastOrder is None:
-        lastOrder = 0
-    print(f"Last item, Order: {lastItem}, {lastOrder}")
 
     cursor = conn.cursor()
     query = "SELECT * FROM get_signed_items(%s, %s)"
@@ -514,7 +513,7 @@ def list_html(phase, system, role, report_id=None):
         reportItems=reportItems,
         completed=completed,
         missingItems=missingItems,
-        # lenMissing=len(missingItems),
+        lenMissing=len(missingItems),
         nextItems=nextItems,
         # lenNext=len(nextItems),
         roleName=role,

@@ -91,7 +91,7 @@ th { background-color: #4CAF50; color: white; }
         <td>{{ nextItems[0][0] }}</td>
         <td>{{ nextItems[0][1] }}</td>
         <td>{{ nextItems[0][2]|safe }}</td>
-        {% if missingItems|length > 0 %}
+        {% if missingItems|length == 0 %}
         <td>
           <a href="{{ url_for('insert', report_id=reportId, item_id=nextItems[0][0], status=0) }}" class="btn">&#9745;&nbsp;OK</a>
         </td>
@@ -100,11 +100,11 @@ th { background-color: #4CAF50; color: white; }
         </td>
         {% endif %}
       </tr>
-      {% for nItem in nextItems %}
+      {% for i in range(1, lenMissing) %}
       <tr>
-        <td>{{ nItem[0] }}</td>
-        <td>{{ nItem[1] }}</td>
-        <td>{{ nItem[2] }}</td>
+        <td>{{ nextItems[i][0] }}</td>
+        <td>{{ nextItems[i][1] }}</td>
+        <td>{{ nextItems[i][2] }}</td>
         <td></td>
       </tr>
       {% endfor %}
