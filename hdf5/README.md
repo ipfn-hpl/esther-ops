@@ -90,7 +90,8 @@ HFD5 Structure:
 ```
 4. To Build the HDF5 file, and import content of CSV data files execute the steps, sequentially:
   * Convert red-pitaya bin files to csv [../README.md#automated-pulse-trigger-and--data-acquisition-sequence](convert_tool)
-  * ```bash
+  * Run
+```bash
 python3 build_hdf5.py -h
 python3 build_hdf5.py -i -e "H-2" -d "2026-04-09_13-29-09" -k 250 -l 24.83 
 python3 build_hdf5.py --pitaya  -f ~/git-repos/esther-ops/red-pitaya/data-files/data_file_2026-04-09_12-29-09.csv
