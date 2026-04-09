@@ -418,12 +418,13 @@ def list_html(phase, system, role, report_id=None):
     cursor.close()
 
     cursor = conn.cursor()
-    query = "SELECT * FROM get_signed_items(%s, %s)"
+    query = "SELECT * FROM get_signed_items(%s, %s, %s, 5)"
     cursor.execute(
         query,
         # LAST_CHECKLINES,
         (
             reportId,
+            phase,
             system,
         ),
     )
@@ -432,7 +433,7 @@ def list_html(phase, system, role, report_id=None):
 
     cursor.close()
     cursor = conn.cursor()
-    query = "SELECT * FROM get_next_items(%s,%s,%s,%s, 3)"
+    query = "SELECT * FROM get_next_items(%s,%s,%s,%s, 5)"
     cursor.execute(
         # NEXT_CHECKLINES,
         query,
