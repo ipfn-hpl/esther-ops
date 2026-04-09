@@ -37,6 +37,8 @@ python3 plot_hdf5.py -s -f /afs/ist.utl.pt/groups/esther/HDF5/316/data_with_meta
 3. The HDF5 file is organized in groups and datasets. File contains the following subgroups and datasets:
 
 HFD5 Structure:
+```
+```
 > [G] cal-data
 > [G] experiment
 > [D] experiment/readings
@@ -84,6 +86,7 @@ HFD5 Structure:
 >  description: Dump Tank Section
 >/raw-data/st:
 >  description: Shock Tube Section
+```
 4. To Build the HDF5 file, and import content of CSV data files execute the steps, sequentially:
   * Convert red-pitaya bin files to csv [../README.md#automated-pulse-trigger-and--data-acquisition-sequence](convert_tool)
   * ```bash
