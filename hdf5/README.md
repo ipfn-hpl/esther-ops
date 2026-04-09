@@ -36,38 +36,73 @@ python3 plot_hdf5.py -s -f /afs/ist.utl.pt/groups/esther/HDF5/316/data_with_meta
 
 3. The HDF5 file is organized in groups and datasets. File contains the following subgroups and datasets:
 
-> Group: cal-data  
-> Group: cal-data/cc  
-> Group: cal-data/ct  
->Group: cal-data/dt  
->Group: cal-data/st  
->Group: raw-data  
->Group: raw-data/cc  
->Group: raw-data/cc/kistler  
->Dataset: raw-data/cc/kistler/red-pitaya, Shape: (16007168,), Dtype: int16  
->Dataset: raw-data/cc/kistler/rhode-schwarz, Shape: (2, 10000000), Dtype: float32  
->Group: raw-data/ct  
->Group: raw-data/dt  
->Group: raw-data/st  
-
-* The Medata is stored in the attributes of the HDF5 file, and contains the following information:
-
-> created_date: 2026-01-27 19:05:00.696462  
-> experiment_name: S-116  
-> institution: IPFN-HPL Lab  
-> shot_date: 2025-12-23_17-44-44  
-> title: Esther ST Experiment Data  
-> version: 1.0  
-
-* The Red Pitaya data is stored in the dataset `raw-data/cc/kistler/red-pitaya`, and contains the raw data acquired from the Red Pitaya oscilloscope. The dataset attributes are.
-
->Dataset 'red-pitaya' attributes:  
-> channels: 1  
-> description: CC Pressure Kistler Sensor red-pitaya data  
-> file_path: /home/esther/git-repos/esther-ops/hdf5/data_with_metadata.h5  
-> sampling_rate: 7812500.0  
-> time_offset: 0.0  
-> units: lsb  
-> sampling_rate: 7812500.0  
->data.shape[0] 16007168  
+HFD5 Structure:
+> [G] cal-data
+> [G] experiment
+> [D] experiment/readings
+> [G] raw-data
+> [G] raw-data/cc
+> [G] raw-data/cc/kistler
+> [D] raw-data/cc/kistler/red-pitaya
+> [D] raw-data/cc/kistler/rohde-schwarz
+> [G] raw-data/ct
+> [G] raw-data/dt
+> [G] raw-data/st
+>/:
+>  author: Bernardo
+>  created_date: 2026-04-09 15:14:29.934634
+>  institution: IPFN-HPL Lab
+>  title: Esther ST Experiment Data
+>  version: 1.0
 >
+>/experiment:
+>  date: 2026-04-09_13-29-09
+>  fill_pressure: 24.83
+>  name: H-2
+>/raw-data:
+>  description: Raw Data from instruments in binary
+>/raw-data/cc:
+>  description: Combustion Chamber
+>/raw-data/cc/kistler:
+>  description: CC Pressure Kistler Sensor
+>  range: 250.0
+>/raw-data/cc/kistler/red-pitaya:
+>  channels: 1
+>  decimation: 16
+>  has_time: False
+>  sampling_rate: 125000000.0
+>  time_offset: -0.08119643479585648
+>  unit: lsb
+>/raw-data/cc/kistler/rohde-schwarz:
+>  channels: 1
+>  has_time: True
+>  unit: volt
+
+>/raw-data/ct:
+>  description: Compression Tube Section
+>/raw-data/dt:
+>  description: Dump Tank Section
+>/raw-data/st:
+>  description: Shock Tube Section
+4. To Build the HDF5 file, and import content of CSV data files execute the steps, sequentially:
+  * Convert red-pitaya bin files to csv [../README.md#automated-pulse-trigger-and--data-acquisition-sequence](convert_tool)
+  * ```bash
+python3 build_hdf5.py -h
+python3 build_hdf5.py -i -e "H-2" -d "2026-04-09_13-29-09" -k 250 -l 24.83 
+python3 build_hdf5.py --pitaya  -f ~/git-repos/esther-ops/red-pitaya/data-files/data_file_2026-04-09_12-29-09.csv
+python3 build_hdf5.py --schwarz  -f ~/Documents/Data-files/RS_ControlRoom/H_2/WFM01.CSV
+# Explore file with:
+python3 plot_kistler.py -e -f data_with_metadata.h5
+```
+
+5. Copy the hdf5 to AFS filesystem
+```bash
+mkdir /afs/ist.utl.pt/groups/esther/HDF5/318
+cp data_with_metadata.h5 /afs/ist.utl.pt/groups/esther/HDF5/318/
+```
+6. Plot the Kistler data with matplotlib
+
+```bash
+# read file from AFS
+python3 plot_kistler.py -a -r 318
+```
