@@ -235,3 +235,123 @@ if __name__ == "__main__":
     elif args.schwarz:
         # update_hdf5(args.file_pathtime, ch1_signal)
         import_hdf5_schwarz(filename, args)
+
+"""
+/
+├── header/
+│   ├── title: "Esther ST Experiment Data"
+│   ├── institution": "IPFN-HPL Lab"
+│   ├── creation_date: 
+│   ├── version: "1.0"
+│   └── author:
+│
+├── experiment/
+│   ├── date:
+│   ├── name: H2
+│   ├── cc_fill_pressure: 40
+│   └── gas_ratios:
+
+├── sensors/
+│   ├── control-room/
+│   └── experimental-hall/
+│       ├── cc/
+│       │   └── kistler/
+│       │       ├── model: ""
+│       │       ├── amplifier: "Kistler Type 5015"
+│       │       ├── pressure_range: 200 # bar
+│       │       ├── wire_number: 504 
+│       │       ├── data_key_0: "raw-data/control-room/rohde-schwarz"
+│       │       └── data_key_1: "raw-data/control-room/red-pitaya"
+│       ├── ct/
+│       │   └── kistler/
+│       │       ├── model: ""
+│       │       ├── amplifier: "Kistler Type 5015"
+│       │       ├── pressure_range: "200 # bar
+│       │       ├── wire_number: 504 
+│       │       └── data_key_0: "raw-data/experimental-hall/rohde-schwarz"
+│       ├── st/
+│       │   ├── trigger-ports/
+│       │   │   ├── model: ""
+│       │   │   ├── amplifier: "Thorlabs PDA36A2"
+│       │   │   ├── st4: ""
+│       │   │   ├── st71/
+│       │   │   │    ├── model: ""
+│       │   │   │    └── data/
+│       │   │   │        ├── key_0: "raw-data/experimental-hall/rohde-schwarz"
+│       │   │   │        ├── channel_0: 2 
+│       │   │   │        └── key_1: "raw-data/experimental-hall/rohde-schwarz"
+│       │   │   ├── st4/
+│       │   └── streak-camera/
+│       └── dt/
+│           └── exit-duct/
+│               ├── thyracont/
+│               │   ├── model: "VSC43MA4"
+│               │   └── pressure_range: "1-1400 mBar" #  (abs)
+│               └── honeywell/
+│                   ├── model: "VSC43MA4"
+│                   ├── pressure_range: "38-3400 mBar" #  (abs)
+│                   └── data/
+│                       ├── key: "raw-data/experimental-hall/rohde-schwarz"
+│                       └── channel: 4
+│
+├── raw-data/
+│   ├── control-room/
+│   │   ├── rohde-schwarz/
+│   │   │   ├── waveforms/
+│   │   │   │   ├── TIME    (unit: s)
+│   │   │   │   └── CH1     (unit: V)
+│   │   │   └── metadata/
+│   │   │       ├── model: "rtb2004"
+│   │   │       ├── serial_number: "1333.1005k04/107554"
+│   │   │       ├── firmware_version: "02.400"
+│   │   │       ├── has_time: True
+│   │   │       ├── sample_interval: 2e-10
+│   │   │       ├── num_samples: 2e-10
+│   │   │       ├── channels: 1
+│   │   │       └── vertical_scale: "1,0.05"
+│   │   └── red-pitaya/
+│   │       ├── waveforms/
+│   │       │   └── CH1     (unit: lsb)
+│   │       └── metadata/
+│   │           ├── model: "STEMlab 125-14"
+│   │           ├── has_time: False
+│   │           ├── sampling_rate: 125.0e6  # Hz
+│   │           ├── decimation: 16
+│   │           ├── time_offset: 0.0
+│   │           ├── channels: 1
+│   │           └── voltage_range: 1.0
+│   └── experimental-hall/
+│       ├── rohde-schwarz/
+│       │   ├── waveforms/
+│       │   │   ├── TIME    (unit: s)
+│       │   │   ├── CH1     (unit: V)
+│       │   │   ├── CH1     (unit: V)
+│       │   │   ├── CH1     (unit: V)
+│       │   │   └── CH2     (unit: V)
+│       │   └── metadata/
+│       │       ├── model: "rtb2004"
+│       │       ├── serial_number: "1333.1005k04/207766"
+│       │       ├── firmware_version: "02.400"
+│       │       ├── has_time: True
+│       │       ├── sample_interval: 2e-10
+│       │       ├── num_samples: 2e-10
+│       │       ├── channels: 1
+│       │       └── vertical_scale: "1,0.05"
+│       ├── tektronix/
+│       │   ├── waveforms/
+│       │   │   ├── TIME    (unit: s)
+│       │   │   ├── CH1     (unit: V)
+│       │   │   └── CH1     (unit: V)
+│       │   └── metadata/
+│       │       ├── model: "mdo4104b-3"
+│       │       ├── sample interval: 2e-10
+│       │       ├── vertical scale: "1,0.05"
+│       └── ...
+│   ├── sample interval: 2e-10
+│   ├── vertical scale: "1,0.05"
+│   │   │    └── attrs: source_file, num_samples, channels, format
+│   ├── model: "mdo4104b-3"
+│   ├── sample interval: 2e-10
+│   ├── vertical scale: "1,0.05"
+│   └── ...
+"""
