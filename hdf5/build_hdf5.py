@@ -8,12 +8,16 @@ python3 build_hdf5.py --schwarz -f ~/Documents/Data-files/RS_ControlRoom/S_116/W
 python3 build_hdf5.py --pitaya -f ../red-pitaya/data-files/S_116/data_file_2025-12-23_17-44-44.csv
 """
 
+import argparse
+import sys
 import numpy as np
+import h5py
 from datetime import datetime
 from EstherHDF5Handler import EstherHDF5Handler
-import argparse
+from parse_tektronix_csv import parse_tektronix_csv
+from pathlib import Path
 
-H5FILE = "data_with_metadata.h5"
+H5FILE_PATH = "data_with_metadata.h5"
 
 
 def read_csv(filepath):
@@ -100,6 +104,40 @@ def import_hdf5_red(filename, args):
         )
 
 
+def import_hdf5_tektronix(args, group: str = "raw-data/experimental-hall/tektronix/"):
+    if not Path(args.csv_file).exists():
+        print(f"Error: File '{args.csv_file}' not found.", file=sys.stderr)
+        return
+    metadata, df = parse_tektronix_csv(args.csv_file)
+    columns = metadata.pop("_columns")
+    print(f" Tektronix CVS Columns: {columns}")
+    h_unit = metadata.get("Horizontal Units", "s")
+    v_units = metadata.get("Vertical Units", [])
+    if isinstance(v_units, str):
+        v_units = [v_units]
+
+    column_info = []
+    channel_idx = 0
+    for col in columns:
+        if col.upper() == "TIME":
+            column_info.append({"original": col, "name": "TIME", "unit": h_unit})
+        else:
+            unit = v_units[channel_idx] if channel_idx < len(v_units) else "V"
+            column_info.append({"original": col, "name": col, "unit": unit})
+            channel_idx += 1
+    with h5py.File(H5FILE_PATH, "a") as hf:
+        # with EstherHDF5Handler(H5FILE, mode="a") as h5:
+        # Store waveform data
+        data_grp = hf.create_group(group + "waveforms")
+        for info in column_info:
+            data = df[info["original"]].values.astype(np.float64)
+            ds = data_grp.create_dataset(
+                info["name"], data=data, compression="gzip", compression_opts=4
+            )
+            if info["unit"]:
+                ds.attrs["unit"] = info["unit"]
+
+
 def import_hdf5_schwarz(filename, args):
     try:
         t, ch1 = read_csv(args.file_path)
@@ -131,37 +169,116 @@ def init_hdf5(filename, args):
         with EstherHDF5Handler(filename, mode="w-") as h5:
             h5.import_from_dict(
                 {
-                    "@title": "Esther ST Experiment Data",
-                    "@institution": "IPFN-HPL Lab",
-                    "@created_date": str(datetime.now()),
-                    # "@institution" = ""
-                    "@version": "1.0",
-                    "@author": "Bernardo",
+                    "header": {
+                        "@title": "Esther ST Experiment Data",
+                        "@institution": "IPFN-HPL Lab",
+                        "@created_date": str(datetime.now()),
+                        "@version": "1.0",
+                        "@author": "bernardo.carvalho@tecnico.ulisboa.pt",
+                    },
                     "experiment": {
                         "@date": args.shot_date,
                         "@name": args.experiment_name,
-                        "@fill_pressure": args.fill_pressure,  # Bar
-                        "readings": [1.0, 2.0, 3.0, 4.0],
+                        "@cc_fill_pressure": args.fill_pressure,  # Bar
+                        "@he_h2_o2_ratios": [8.0, 2.0, 1.2],
+                    },
+                    "diagnostics": {
+                        "@description": "Sensors/instruments",
+                        "control-room": {
+                            "@description": "Sensors in HPL Control room",
+                        },
+                        "experimental-hall": {
+                            "@description": "Sensors/instruments in HPL experimental hall",
+                            "cc": {
+                                "@description": "Combustion Chamber",
+                                "kistler": {
+                                    "@description": "CC Pressure Kistler Sensor",
+                                    "@amplifier": "Kistler Type 5015",
+                                    "@wire_number": "504",
+                                    "@pressure_range": args.kistler_range,  # Bar
+                                    "@data_key_0": "raw-data/control-room/rohde-schwarz",
+                                    "@data_key_0": "raw-data/control-room/red-pitaya",
+                                },
+                            },
+                            "ct": {
+                                "@description": "Compression Tube Section",
+                                "kistler": {
+                                    "@description": "CC Pressure Kistler Sensor",
+                                    "@amplifier": "Kistler Type 5015",
+                                    "@wire_number": "501",
+                                    "@pressure_range": 10,  # Bar
+                                    "@data_key_0": "raw-data/experimental-hall/rohde-schwarz",
+                                    "@data_key_1": "raw-data/experimental-hall/tektronix/waveforms/CH1",
+                                },
+                            },
+                            "st": {
+                                "@description": "Shock Tube Section",
+                            },
+                            "dt": {
+                                "@description": "Dump Tank Section",
+                            },
+                        },
                     },
                     "raw-data": {
                         "@description": "Raw Data from instruments in binary",
-                        "cc": {
-                            "@description": "Combustion Chamber",
-                            "kistler": {
-                                "@description": "CC Pressure Kistler Sensor",
-                                "@range": args.kistler_range,  # Bar
+                        "control-room": {
+                            "@description": "Instruments in HPL Control room",
+                            "rohde-schwarz": {
+                                "metadata": {
+                                    "@model": "rtb2004",
+                                    "@serial_number": "1333.1005k04/107554",
+                                    "@firmware_version": "02.400",
+                                    "@has_time": True,
+                                    "@sample_interval": 2e-10,
+                                    "@num_samples": 2e1,
+                                    "@channels": 1,
+                                    "@unit": "V",
+                                    "@vertical_scale": "Volt",
+                                },
+                            },
+                            "red-pitaya": {
+                                "metadata": {
+                                    "@model": "STEMlab 125-14",
+                                    "@hostname": "rp-f01735.local",
+                                    "@ecosystem": "1.04-93661995d",
+                                    "@has_time": False,
+                                    "@sample_rate": 125.0e6,  # Hz
+                                    "@decimation": 16,
+                                    "@channels": 1,
+                                    "@unit": "lsb",
+                                    "@vertical_range": "+-1V",
+                                },
                             },
                         },
-                        "ct": {
-                            "@description": "Compression Tube Section",
+                        "experimental-hall": {
+                            "@description": "Instruments in HPL experimental hall",
+                            "rohde-schwarz": {
+                                "metadata": {
+                                    "@model": "rtb2004",
+                                    "@serial_number": "1333.1005k04/207766",
+                                    "@firmware_version": "02.400",
+                                    "@has_time": True,
+                                    "@sample_interval": 2e-10,
+                                    "@num_samples": 2e1,
+                                    "@channels": 4,
+                                    "@unit": "V",
+                                    "@vertical_scale": "Volt",
+                                },
+                            },
+                            "tektronix": {
+                                "metadata": {
+                                    "@model": "MDO4104B-3",
+                                    "@serial_number": "C020372",
+                                    "@firmware_version": "3.18",
+                                    "@has_time": True,
+                                    "@sample_interval": 2e-10,
+                                    "@num_samples": 2e1,
+                                    "@channels": 2,
+                                    "@unit": "V",
+                                    "@vertical_scale": "Volt",
+                                },
+                            },
                         },
-                        "st": {
-                            "@description": "Shock Tube Section",
-                        },
-                        "dt": {
-                            "@description": "Dump Tank Section",
-                        },
-                        # "readings": [1.0, 2.0, 3.0, 4.0],
                     },
                     "cal-data": {},
                 }
@@ -180,8 +297,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--file_path", type=str, help="File to read", default="dataXX.bin"
     )
+    parser.add_argument("-v", "--csv_file", type=str, help="Input CSV file path")
     parser.add_argument(
         "-p", "--pitaya", action="store_true", help="Update with RedPitaya "
+    )
+    parser.add_argument(
+        "-o", "--tektronix", action="store_true", help="Update with Tektronix CSV"
     )
     parser.add_argument(
         "-s", "--schwarz", action="store_true", help="Update with Rohde-Schwarz CSV"
@@ -210,7 +331,7 @@ if __name__ == "__main__":
         default="0.0",
     )
     args = parser.parse_args()
-    filename = H5FILE
+    filename = H5FILE_PATH
     # data_dir = Path.cwd()
     # file = filename + ".h5"
     # file_path = data_dir / file
@@ -232,6 +353,8 @@ if __name__ == "__main__":
     if args.pitaya:
         print("pitaya:")
         import_hdf5_red(filename, args)
+    elif args.tektronix:
+        import_hdf5_tektronix(args)
     elif args.schwarz:
         # update_hdf5(args.file_pathtime, ch1_signal)
         import_hdf5_schwarz(filename, args)
