@@ -11,10 +11,11 @@ python3 build_hdf5.py --pitaya -f ../red-pitaya/data-files/S_116/data_file_2025-
 import argparse
 import sys
 import numpy as np
+import pandas as pd
 import h5py
 from datetime import datetime
 from EstherHDF5Handler import EstherHDF5Handler
-from parse_tektronix_csv import parse_tektronix_csv
+from parse_csv import parse_tektronix_csv
 from pathlib import Path
 
 H5FILE_PATH = "data_with_metadata.h5"
@@ -104,6 +105,51 @@ def import_hdf5_red(filename, args):
         )
 
 
+def import_hdf5_rohde(args, group: str = "raw-data/experimental-hall/rohde-schwarz/"):
+    csv_path = Path(args.csv_file)
+    if not csv_path.exists():
+        print(f"Error: File '{args.csv_file}' not found.", file=sys.stderr)
+        return
+    # column_info = parse_rohde_csv(csv_path)
+    column_info = []
+    # Read CSV - pandas handles scientific notation automatically
+    df = pd.read_csv(csv_path)
+    # with open(csv_path, "r", newline="") as f:
+    # Parse column names to extract units (e.g., "C1 in V" -> name="C1", unit="V")
+    for col in df.columns:
+        if " in " in col:
+            name, unit = col.rsplit(" in ", 1)
+            column_info.append(
+                {"original": col, "name": name.strip(), "unit": unit.strip()}
+            )
+        else:
+            column_info.append({"original": col, "name": col, "unit": ""})
+    print(f"R Column I: {column_info}")
+    with h5py.File(H5FILE_PATH, "a") as hf:
+        try:
+            data_grp = hf.create_group(group + "waveforms")
+        except ValueError:
+            print(" Unable to create group (name already exists)")
+            key = group + "waveforms"
+            data_grp = hf[key]
+        for info in column_info:
+            print(f"Column O: {info['original']}, N:  {info['name']}")
+            data = df[info["original"]].values.astype(np.float32)
+            name = info["name"]
+            if name == "in s":
+                name = "TIME"
+            ds = data_grp.create_dataset(
+                name, data=data, compression="gzip", compression_opts=4
+            )
+            # Store unit as attribute
+            if info["unit"]:
+                ds.attrs["unit"] = info["unit"]
+        # Store metadata
+        data_grp.attrs["source_file"] = csv_path.name
+        data_grp.attrs["num_samples"] = len(df)
+        data_grp.attrs["columns"] = [info["name"] for info in column_info]
+
+
 def import_hdf5_tektronix(args, group: str = "raw-data/experimental-hall/tektronix/"):
     if not Path(args.csv_file).exists():
         print(f"Error: File '{args.csv_file}' not found.", file=sys.stderr)
@@ -130,7 +176,7 @@ def import_hdf5_tektronix(args, group: str = "raw-data/experimental-hall/tektron
         # Store waveform data
         data_grp = hf.create_group(group + "waveforms")
         for info in column_info:
-            data = df[info["original"]].values.astype(np.float64)
+            data = df[info["original"]].values.astype(np.float32)
             ds = data_grp.create_dataset(
                 info["name"], data=data, compression="gzip", compression_opts=4
             )
@@ -230,7 +276,7 @@ def init_hdf5(filename, args):
                                     "@firmware_version": "02.400",
                                     "@has_time": True,
                                     "@sample_interval": 2e-10,
-                                    "@num_samples": 2e1,
+                                    #                                    "@num_samples": 2e1,
                                     "@channels": 1,
                                     "@unit": "V",
                                     "@vertical_scale": "Volt",
@@ -258,9 +304,9 @@ def init_hdf5(filename, args):
                                     "@serial_number": "1333.1005k04/207766",
                                     "@firmware_version": "02.400",
                                     "@has_time": True,
-                                    "@sample_interval": 2e-10,
-                                    "@num_samples": 2e1,
-                                    "@channels": 4,
+                                    #                                    "@sample_interval": 2e-10,
+                                    #                                    "@num_samples": 2e1,
+                                    #                                    "@channels": 4,
                                     "@unit": "V",
                                     "@vertical_scale": "Volt",
                                 },
@@ -357,7 +403,8 @@ if __name__ == "__main__":
         import_hdf5_tektronix(args)
     elif args.schwarz:
         # update_hdf5(args.file_pathtime, ch1_signal)
-        import_hdf5_schwarz(filename, args)
+        # import_hdf5_schwarz(filename, args)
+        import_hdf5_rohde(args)
 
 """
 /
