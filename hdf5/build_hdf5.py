@@ -117,14 +117,19 @@ def import_hdf5_rohde(args, group: str = "raw-data/experimental-hall/rohde-schwa
     # with open(csv_path, "r", newline="") as f:
     # Parse column names to extract units (e.g., "C1 in V" -> name="C1", unit="V")
     for col in df.columns:
-        if " in " in col:
+        if col == "in s":
+            # Custom, this is TIME colum
+            name = "TIME"
+            unit = "s"
+            print(f"Col O: {col}, N: {name}, U: {unit}")
+            column_info.append({"original": col, "name": "TIME", "unit": "s"})
+        elif " in " in col:
             name, unit = col.rsplit(" in ", 1)
-            column_info.append(
-                {"original": col, "name": name.strip(), "unit": unit.strip()}
-            )
+            print(f"Col O: {col}, N: {name}, U: {unit}")
+            column_info.append({"original": col, "name": name, "unit": unit})
         else:
             column_info.append({"original": col, "name": col, "unit": ""})
-    print(f"R Column I: {column_info}")
+    # print(f"R Column I: {column_info}")
     with h5py.File(H5FILE_PATH, "a") as hf:
         try:
             data_grp = hf.create_group(group + "waveforms")
@@ -136,8 +141,8 @@ def import_hdf5_rohde(args, group: str = "raw-data/experimental-hall/rohde-schwa
             print(f"Column O: {info['original']}, N:  {info['name']}")
             data = df[info["original"]].values.astype(np.float32)
             name = info["name"]
-            if name == "in s":
-                name = "TIME"
+            # if name == "in s":
+            #    name = "TIME"
             ds = data_grp.create_dataset(
                 name, data=data, compression="gzip", compression_opts=4
             )
