@@ -130,6 +130,16 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                     "cal-data": {},
                 }
             )
+            print("HDF5 File Content:")
+            for item in h5.list_contents():
+                print(f"  {item}")
+
+            all_attributes = h5.list_all_attrs()
+
+            for path, attrs in all_attributes.items():
+                print(f"\n{path}:")
+                for key, value in attrs.items():
+                    print(f"  {key}: {value}")
     except FileExistsError:
         print(f"File: {filename} already exists. Please delete it first")
 
@@ -192,4 +202,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     init_hdf(args)
     print(args.ratios)
-    explore_hdf()
+    # explore_hdf()
