@@ -1,4 +1,6 @@
 h5py
+csv
 numpy
+pandas
 matplotlib
 
