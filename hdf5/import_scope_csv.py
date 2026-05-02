@@ -20,18 +20,25 @@ from parse_csv import parse_tektronix_csv
 H5FILE_PATH = "data_with_metadata.h5"
 
 
-def import_hdf5_pitaya(args, group: str = "raw-data/control-room/rohde-schwarz/"):
+def import_hdf5_pitaya(args, group: str = "raw-data/control-room/red-pitaya/"):
     csv_path = Path(args.csv_file)
-    column_info = []
     # Read CSV - pandas handles scientific notation automatically
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path, header=None, low_memory=False)
+    # Converter para numérico (float) com NaN para '-'
+    # df[1] = pd.to_numeric(df[1], errors='coerce')
+    # Substituir '-' por 0 ou outro valor
+    df[1] = df[1].replace("-", 0)
+
     with h5py.File(H5FILE_PATH, "a") as hf:
+        data = df[1].values.astype(np.int16)
+        # ds =
         try:
             data_grp = hf.create_group(group + "waveforms")
+            data_grp.create_dataset(
+                "ch1", data=data, compression="gzip", compression_opts=4
+            )
         except ValueError:
             print(" Unable to create group (name already exists)")
-            key = group + "waveforms"
-            data_grp = hf[key]
 
 
 def import_hdf5_rohde(args, group: str = "raw-data/experimental-hall/rohde-schwarz/"):
@@ -124,6 +131,9 @@ def main():
     parser.add_argument(
         "-r", "--rohde", action="store_true", help="Update with Rohde-Schwarz CSV"
     )
+    parser.add_argument(
+        "-p", "--pitaya", action="store_true", help="Update with red-pitaya"
+    )
     args = parser.parse_args()
     if not Path(args.csv_file).exists():
         print(f"Error: File '{args.csv_file}' not found.", file=sys.stderr)
@@ -132,6 +142,13 @@ def main():
     #
     if args.tektronix:
         import_hdf5_tektronix(args)
+        sys.exit(1)
+    elif args.pitaya:
+        if args.bunker:
+            print("Bunker oscilloscope import not implemented yet.")
+        else:
+            # print("Rohde-Schwarz import not implemented yet.")
+            import_hdf5_pitaya(args)  # , group="raw-data/control-room/rohde-schwarz/")
     elif args.rohde:
         # update_hdf5(args.file_pathtime, ch1_signal)
         # import_hdf5_schwarz(filename, args)
@@ -141,6 +158,7 @@ def main():
         else:
             # print("Rohde-Schwarz import not implemented yet.")
             import_hdf5_rohde(args, group="raw-data/control-room/rohde-schwarz/")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
