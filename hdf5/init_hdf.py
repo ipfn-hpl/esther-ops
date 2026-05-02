@@ -3,6 +3,7 @@ python3 init_hdf.py  -e "H-2" -d "2026-04-09_13-29-09" -k 250.0 -t 11.0 -f 24.83
 """
 
 import argparse
+import sys
 
 from EstherHDF5Handler import EstherHDF5Handler
 from datetime import datetime
@@ -161,6 +162,9 @@ def explore_hdf(filename: str = H5FILE_PATH):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script to init Esther Shot HDF5 file")
     parser.add_argument(
+        "-x", "--explore", action="store_true", help="Explore with Bunker oscilloscope"
+    )
+    parser.add_argument(
         "-e", "--experiment_name", type=str, help="Experiment Name", default="S-117"
     )
     parser.add_argument(
@@ -200,6 +204,19 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    if args.explore:
+        with EstherHDF5Handler(H5FILE_PATH, mode="r") as h5:
+            print("HDF5 File Content:")
+            for item in h5.list_contents():
+                print(f"  {item}")
+
+            all_attributes = h5.list_all_attrs()
+
+            for path, attrs in all_attributes.items():
+                print(f"\n{path}:")
+                for key, value in attrs.items():
+                    print(f"  {key}: {value}")
+        sys.exit(1)
     init_hdf(args)
     print(args.ratios)
     # explore_hdf()
