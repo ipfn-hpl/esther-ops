@@ -43,8 +43,8 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                                     "@amplifier": "Kistler Type 5015",
                                     "@wire_number": "504",
                                     "@pressure_range": args.kistler_cc_range,  # Bar
-                                    "@data_key_0": "raw-data/control-room/rohde-schwarz",
-                                    "@data_key_0": "raw-data/control-room/red-pitaya",
+                                    "@data_key_0": "raw-data/control-room/rohde-schwarz//waveforms/C1",
+                                    "@data_key_1": "raw-data/control-room/red-pitaya/waveforms/CH1",
                                 },
                             },
                             "ct": {

@@ -35,7 +35,7 @@ def import_hdf5_pitaya(args, group: str = "raw-data/control-room/red-pitaya/"):
         try:
             data_grp = hf.create_group(group + "waveforms")
             data_grp.create_dataset(
-                "ch1", data=data, compression="gzip", compression_opts=4
+                "CH1", data=data, compression="gzip", compression_opts=4
             )
         except ValueError:
             print(" Unable to create group (name already exists)")
