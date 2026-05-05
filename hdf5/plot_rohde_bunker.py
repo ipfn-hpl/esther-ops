@@ -32,53 +32,57 @@ def plot_kistler(hdf):
         kistler_range = attrs[key]
         kistler_scale = kistler_range / 10.0  # Bar per Volt
         print(f"Attributes: {attrs}")
-        key = "raw-data/control-room/rohde-schwarz/waveforms/TIME"
+        key = "raw-data/experimental-hall/rohde-schwarz/waveforms/TIME"
         rtime = hdf[key][:]
-        key = "raw-data/control-room/rohde-schwarz/waveforms/C1"
+        key = "raw-data/experimental-hall/rohde-schwarz/waveforms/C1"
         rdata = hdf[key][:]
         print(rdata.shape)
         # r_data = estherHdf5.get_rohde_schwarz_data()
         index = np.argmax(rdata)
         timeMaxRS = rtime[index]
         print(f" schwarz max index {index}, time: {timeMaxRS}")
-        axs[0].set_title("Rohde-Schwarz Oscilloscope", fontsize="small", loc="right")
+        axs[0].set_title(
+            "Bunker Rohde-Schwarz Oscilloscope", fontsize="small", loc="right"
+        )
         axs[0].plot(
             rtime,
             rdata * kistler_scale + fill_pressure,
             color="blue",
+            label="Kistler CC",
         )  # alpha=0.5)
-        axs[0].set_ylabel("Pressure / Bar")
+        # axs[0].set_ylabel("Pressure / Bar")
+        key = "raw-data/experimental-hall/rohde-schwarz/waveforms/C2"
+        rdata = hdf[key][:]
+        # r_data = estherHdf5.get_rohde_schwarz_data()
+        axs[0].plot(
+            rtime,
+            rdata,  # * kistler_scale + fill_pressure,
+            color="red",
+            label="Kistler CT",
+        )  # alpha=0.5)
+        # axs[0].set_ylabel("Pressure / Bar")
         axs[0].grid()
+        axs[0].legend(loc="upper right")
         #
 
-        rObj = "raw-data/control-room/red-pitaya/metadata"
-        red = hdf[rObj]
-        attrs = dict(red.attrs)  # h5.get_attrs("diagnostics/experimental-hall/cc")
-        print(f"Red Attributes: {attrs}")
-        key = "sample_rate"
-        sample_rate = get_attr(hdf, rObj, key)
-        key = "decimation"
-        decimation = get_attr(hdf, "raw-data/control-room/red-pitaya/metadata", key)
-        key = "time_offset"
-        time_offset = get_attr(hdf, rObj, key)
-
-        key = "raw-data/control-room/red-pitaya/waveforms/CH1"
-        pdata = hdf[key][:]
-
-        print(f"Data shape: {pdata.shape}, sample_rate: {sample_rate} Hz")
-        time = np.arange(pdata.shape[0]) / sample_rate * decimation + time_offset
-        index = np.argmax(pdata)
-        timeMaxRP = time[index]
-        print(f"pitaya max index {index}, time: {timeMaxRP}")
-        timeOffSet = timeMaxRS - timeMaxRP
-        print(f"Measured RedPitaya TimeOffset  {timeOffSet} ms ")
+        key = "raw-data/experimental-hall/rohde-schwarz/waveforms/C3"
+        rdata = hdf[key][:]
         axs[1].plot(
-            time,
-            pdata,
+            rtime,
+            rdata,  # * kistler_scale + fill_pressure,
+            color="blue",
+            label="Thorlabs ST1",
+        )
+        key = "raw-data/experimental-hall/rohde-schwarz/waveforms/C4"
+        rdata = hdf[key][:]
+        axs[1].plot(
+            rtime,
+            rdata,  # * kistler_scale + fill_pressure,
             color="red",
-        )  # alpha=0.5)
-        axs[1].set_title("Red Pitaya ADC Ch1", fontsize="small", loc="right")
+            label="Dumptank",
+        )
         axs[1].grid()
+        axs[1].legend(loc="upper left")
     except KeyError:
         print(f"object '{key}' doesn't exist in dataset")
     fig.supxlabel("Time / ms")

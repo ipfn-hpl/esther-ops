@@ -1,5 +1,6 @@
 """
-python3 init_hdf.py  -e "H-2" -d "2026-04-09_13-29-09" -k 250.0 -t 11.0 -f 24.83 -r 8.2 2 1.22
+python3 init_hdf.py -e "H-2" -d "2026-04-09_13-29-09" -k 250.0 -t 11.0 -f 24.83 -r 8.2 2 1.22
+python3 init_hdf.py -x
 """
 
 import argparse
@@ -43,7 +44,7 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                                     "@amplifier": "Kistler Type 5015",
                                     "@wire_number": "504",
                                     "@pressure_range": args.kistler_cc_range,  # Bar
-                                    "@data_key_0": "raw-data/control-room/rohde-schwarz//waveforms/C1",
+                                    "@data_key_0": "raw-data/control-room/rohde-schwarz/waveforms/C1",
                                     "@data_key_1": "raw-data/control-room/red-pitaya/waveforms/CH1",
                                 },
                             },
@@ -55,7 +56,7 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                                     "@wire_number": "501",
                                     "@pressure_range": args.kistler_ct_range,  # Bar
                                     # "@pressure_range": 10,  # Bar
-                                    "@data_key_0": "raw-data/experimental-hall/rohde-schwarz",
+                                    "@data_key_0": "raw-data/experimental-hall/rohde-schwarz/waveforms/C1",
                                     "@data_key_1": "raw-data/experimental-hall/tektronix/waveforms/CH1",
                                 },
                             },
@@ -91,6 +92,7 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                                     "@ecosystem": "1.04-93661995d",
                                     "@has_time": False,
                                     "@sample_rate": 125.0e6,  # Hz
+                                    "@time_offset": 0.0,
                                     "@decimation": 16,
                                     "@channels": 1,
                                     "@unit": "lsb",

@@ -1,11 +1,10 @@
 """
-Here's a Python class for import data in EstherHDF5Handler:
+Here's a Python class for import oscilloscope data in Esther HDF5 Files
 
 https://github.com/ipfn-hpl/esther-ops/tree/main/hdf5
 
-python3 build_hdf5.py -i -e "S-116" -d "2025-12-23_17-44-44" -k 200
-python3 build_hdf5.py --schwarz -f ~/Documents/Data-files/RS_ControlRoom/S_116/WFM03.CSV
-python3 build_hdf5.py --pitaya -f ../red-pitaya/data-files/S_116/data_file_2025-12-23_17-44-44.csv
+python3 import_scope_csv.py -r ~/Documents/Data-files/RS_ControlRoom/H_2/WFM01.CSV
+python3 import_scope_csv.py -b -r ~/Documents/Data-files/RS_Bunker/H_2/WFM04.CSV
 """
 
 import argparse
@@ -15,7 +14,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from parse_csv import parse_tektronix_csv
-
 
 H5FILE_PATH = "data_with_metadata.h5"
 
@@ -145,7 +143,7 @@ def main():
         sys.exit(1)
     elif args.pitaya:
         if args.bunker:
-            print("Bunker oscilloscope import not implemented yet.")
+            print("Bunker pitaya import not implemented yet.")
         else:
             # print("Rohde-Schwarz import not implemented yet.")
             import_hdf5_pitaya(args)  # , group="raw-data/control-room/rohde-schwarz/")
@@ -154,7 +152,7 @@ def main():
         # import_hdf5_schwarz(filename, args)
         if args.bunker:
             # print("Bunker oscilloscope import not implemented yet.")
-            import_hdf5_rohde(args)
+            import_hdf5_rohde(args, group="raw-data/experimental-hall/rohde-schwarz/")
         else:
             # print("Rohde-Schwarz import not implemented yet.")
             import_hdf5_rohde(args, group="raw-data/control-room/rohde-schwarz/")

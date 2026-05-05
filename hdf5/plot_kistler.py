@@ -57,7 +57,7 @@ def plot_kistler(estherHdf5):
             data[1],
             color="red",
         )  # alpha=0.5)
-        axs[1].set_title("Red Pitaya ADC Ch1", fontsize="small", loc="right")
+        axs[1].set_title("Red Pitaya ADC CH1", fontsize="small", loc="right")
         axs[1].grid()
     except KeyError:
         print("object 'red-pitaya' doesn't exist in dataset")
