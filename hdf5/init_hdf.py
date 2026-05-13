@@ -72,62 +72,9 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                         "@description": "Raw Data from instruments in binary",
                         "control-room": {
                             "@description": "Instruments in HPL Control room",
-                            "rohde-schwarz": {
-                                "metadata": {
-                                    "@model": "rtb2004",
-                                    "@serial_number": "1333.1005k04/107554",
-                                    "@firmware_version": "02.400",
-                                    "@has_time": True,
-                                    # "@sample_interval": 2e-10,
-                                    #                                    "@num_samples": 2e1,
-                                    # "@channels": 1,
-                                    "@unit": "V",
-                                    "@vertical_scale": "Volt",
-                                },
-                            },
-                            "red-pitaya": {
-                                "metadata": {
-                                    "@model": "STEMlab 125-14",
-                                    "@hostname": "rp-f01735.local",
-                                    "@ecosystem": "1.04-93661995d",
-                                    "@has_time": False,
-                                    "@sample_rate": 125.0e6,  # Hz
-                                    "@time_offset": 0.0,
-                                    "@decimation": 16,
-                                    "@channels": 1,
-                                    "@unit": "lsb",
-                                    "@vertical_range": "+-1V",
-                                },
-                            },
                         },
                         "experimental-hall": {
                             "@description": "Instruments in HPL experimental hall",
-                            "rohde-schwarz": {
-                                "metadata": {
-                                    "@model": "rtb2004",
-                                    "@serial_number": "1333.1005k04/207766",
-                                    "@firmware_version": "02.400",
-                                    "@has_time": True,
-                                    #                                    "@sample_interval": 2e-10,
-                                    #                                    "@num_samples": 2e1,
-                                    #                                    "@channels": 4,
-                                    "@unit": "V",
-                                    "@vertical_scale": "Volt",
-                                },
-                            },
-                            "tektronix": {
-                                "metadata": {
-                                    "@model": "MDO4104B-3",
-                                    "@serial_number": "C020372",
-                                    "@firmware_version": "3.18",
-                                    "@has_time": True,
-                                    # "@sample_interval": 2e-10,
-                                    # "@num_samples": 2e1,
-                                    # "@channels": 2,
-                                    "@unit": "V",
-                                    "@vertical_scale": "Volt",
-                                },
-                            },
                         },
                     },
                     "cal-data": {},

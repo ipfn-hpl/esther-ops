@@ -14,11 +14,36 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from parse_csv import parse_tektronix_csv
+from EstherHDF5Handler import EstherHDF5Handler
 
 H5FILE_PATH = "data_with_metadata.h5"
 
 
-def import_hdf5_pitaya(args, group: str = "raw-data/control-room/red-pitaya/"):
+def import_pitaya2hdf(args):
+    if args.bunker:
+        print("Bunker pitaya import not implemented yet.")
+        return
+    room = "raw-data/control-room/"
+    dict_osc = {
+        "red-pitaya": {
+            "metadata": {
+                "@model": "STEMlab 125-14",
+                "@hostname": "rp-f01735.local",
+                "@ecosystem": "1.04-93661995d",
+                "@has_time": False,
+                "@sample_rate": 125.0e6,  # Hz
+                "@time_offset": 0.0,  # To rohde-schwarz oscilloscope
+                "@decimation": 16,
+                "@channels": 1,
+                "@unit": "lsb",
+                "@vertical_range": "+-1V",
+            },
+        },
+    }
+    # group: str = "raw-data/red-pitaya/"
+    with EstherHDF5Handler(H5FILE_PATH, mode="a") as h5:
+        h5.import_from_dict(dict_osc, group_path=room)
+    group = room + "red-pitaya/"
     csv_path = Path(args.csv_file)
     # Read CSV - pandas handles scientific notation automatically
     df = pd.read_csv(csv_path, header=None, low_memory=False)
@@ -39,8 +64,52 @@ def import_hdf5_pitaya(args, group: str = "raw-data/control-room/red-pitaya/"):
             print(" Unable to create group (name already exists)")
 
 
-def import_hdf5_rohde(args, group: str = "raw-data/experimental-hall/rohde-schwarz/"):
+def import_rohde2hdf(
+    args,
+):  # , group: str = "raw-data/experimental-hall/rohde-schwarz/"):
     csv_path = Path(args.csv_file)
+    room = "raw-data/"
+    if args.bunker:
+        # room = "raw-data/experimental-hall"
+        room += "experimental-hall/"
+        dict_osc = {
+            "rohde-schwarz": {
+                "metadata": {
+                    "@model": "rtb2004",
+                    "@serial_number": "1333.1005k04/107554",
+                    "@firmware_version": "02.400",
+                    "@has_time": True,
+                    "@trigger_source": "C1",
+                    "@trigger_type": "edge",
+                    "@trigger_slope": "falling",
+                    "@unit": "V",
+                    "@vertical_scale": "Volt",
+                },
+            },
+        }
+    else:
+        # print("Rohde-Schwarz import not implemented yet.")
+        # room = "raw-data/control-room"
+        room += "control-room/"
+        dict_osc = {
+            "rohde-schwarz": {
+                "metadata": {
+                    "@model": "rtb2004",
+                    "@serial_number": "1333.1005k04/207766",
+                    "@firmware_version": "02.400",
+                    "@has_time": True,
+                    "@trigger_source": "C1",
+                    "@trigger_type": "edge",
+                    "@trigger_slope": "rising",
+                    #                                    "@channels": 4,
+                    "@unit": "V",
+                    "@vertical_scale": "Volt",
+                },
+            },
+        }
+    with EstherHDF5Handler(H5FILE_PATH, mode="a") as h5:
+        h5.import_from_dict(dict_osc, group_path=room)
+    group = room + "rohde-schwarz/"
     column_info = []
     # Read CSV - pandas handles scientific notation automatically
     df = pd.read_csv(csv_path)
@@ -84,7 +153,33 @@ def import_hdf5_rohde(args, group: str = "raw-data/experimental-hall/rohde-schwa
         data_grp.attrs["columns"] = [info["name"] for info in column_info]
 
 
-def import_hdf5_tektronix(args, group: str = "raw-data/experimental-hall/tektronix/"):
+def import_tektronix2hdf(args):
+    # , group: str = "raw-data/experimental-hall/tektronix/"):
+    room = "raw-data/"
+    # if args.bunker:
+    # room = "raw-data/experimental-hall"
+    room += "experimental-hall/"
+    dict_osc = {
+        "tektronix": {
+            "metadata": {
+                "@model": "MDO4104B-3",
+                "@serial_number": "C020372",
+                "@firmware_version": "3.18",
+                "@has_time": True,
+                "@trigger_source": "CH1",
+                "@trigger_type": "edge",
+                "@trigger_slope": "rising",
+                # "@sample_interval": 2e-10,
+                # "@num_samples": 2e1,
+                # "@channels": 2,
+                "@unit": "V",
+                "@vertical_scale": "Volt",
+            },
+        },
+    }
+    with EstherHDF5Handler(H5FILE_PATH, mode="a") as h5:
+        h5.import_from_dict(dict_osc, group_path=room)
+    group = room + "tektronix/"
     metadata, df = parse_tektronix_csv(args.csv_file)
     columns = metadata.pop("_columns")
     print(f" Tektronix CVS Columns: {columns}")
@@ -139,23 +234,14 @@ def main():
     # parser.add_argument("-c", "--csv", action="store_true", help="Open CSV")
     #
     if args.tektronix:
-        import_hdf5_tektronix(args)
+        import_tektronix2hdf(args)
         sys.exit(1)
     elif args.pitaya:
-        if args.bunker:
-            print("Bunker pitaya import not implemented yet.")
-        else:
-            # print("Rohde-Schwarz import not implemented yet.")
-            import_hdf5_pitaya(args)  # , group="raw-data/control-room/rohde-schwarz/")
+        import_pitaya2hdf(args)  # , group="raw-data/control-room/rohde-schwarz/")
     elif args.rohde:
         # update_hdf5(args.file_pathtime, ch1_signal)
-        # import_hdf5_schwarz(filename, args)
-        if args.bunker:
-            # print("Bunker oscilloscope import not implemented yet.")
-            import_hdf5_rohde(args, group="raw-data/experimental-hall/rohde-schwarz/")
-        else:
-            # print("Rohde-Schwarz import not implemented yet.")
-            import_hdf5_rohde(args, group="raw-data/control-room/rohde-schwarz/")
+        # print("Rohde-Schwarz import not implemented yet.")
+        import_rohde2hdf(args)  # , group="raw-data/control-room/rohde-schwarz/")
         sys.exit(1)
 
 
