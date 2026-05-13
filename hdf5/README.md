@@ -13,20 +13,47 @@ sshfs -o ro,default_permissions,cache=yes fumanchu.tecnico.ulisboa.pt:/srv/nfs/s
 ```
 
 
-2. Plotting the data with Python
+2. Creating HDF file for each Pulse
+ * Create and initialize HDF file 
+```bash
+python3 init_hdf.py -h
+python3 init_hdf.py -e "H-1" -d "2025-11-19_14_42" -k 400 -f 41.43  -r 8.0 2.0 1.2
+```
+ * Import oscilloscope data from CSV files:
+```bash
+# Rohde-schwarz in Control Room
+python3 import_scope_csv.py -r ~/Documents/Data-files/RS_ControlRoom/S_115/WFM02.CSV
+# Red Pitaya in Control Room
+py import_scope_csv.py --pitaya ../red-pitaya/data-files/data_file_2026-04-09_12-29-09.csv
+# Rohde-schwarz in Experimental Hall
+python3 import_scope_csv.py -b -r ~/Documents/Data-files/RS_Bunker/H_2/WFM04.CSV
+# Tektronix in Experimental Hall
+python3 import_scope_csv.py -b -t ~/Documents/Data-files/Tek_Bunker/H_2/tek0000.csv
+```
+ * Explore HDF file:
+```bash
+python3 init_hdf.py -x
+```
+ * Copy file to server 
+```bash
+mv data_with_metadata.h5 hdf-files/<report_id>/
+```
+
+
+3. Plotting the data with Python
  * Plot CC Kistler data
-```python
+```bash
 sudo apt install python3-hdf5storage python3-matplotlib
 cd ~/git-repos/esther-ops/hdf5
 python3 plot_kistler_cc.py -f hdf-files/318/data_with_metadata.h5  
 ```
 
  * Plot Bunker Rohde-schwarz oscilloscope  data
-```python
+```bash
 python3 plot_rohde_bunker.py -f hdf-files/318/data_with_metadata.h5
 ```
  * Plot Bunker Tektronix oscilloscope  data
-```python
+```bash
 python3 tek_h5_viewer.py hdf-files/318/data_with_metadata.h5
 ```
 
