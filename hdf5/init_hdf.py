@@ -21,13 +21,13 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                         "@title": "Esther ST Experiment Data",
                         "@institution": "IPFN-HPL Lab",
                         "@created_date": str(datetime.now()),
-                        "@version": "1.0",
+                        "@version": "1.001",
                         "@author": "bernardo.carvalho@tecnico.ulisboa.pt",
                     },
                     "experiment": {
                         "@date": args.shot_date,
                         "@name": args.experiment_name,
-                        "@cc_fill_pressure": args.fill_pressure,  # Bar
+                        # "@cc_fill_pressure": args.fill_pressure,  # Bar
                         "@he_h2_o2_ratios": args.ratios,
                     },
                     "diagnostics": {
@@ -43,7 +43,7 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                                     "@description": "CC Pressure Kistler Sensor",
                                     "@amplifier": "Kistler Type 5015",
                                     "@wire_number": "504",
-                                    "@pressure_range": args.kistler_cc_range,  # Bar
+                                    # "@pressure_range": args.kistler_cc_range,  # Bar
                                     "@data_key_0": "raw-data/control-room/rohde-schwarz/waveforms/C1",
                                     "@data_key_1": "raw-data/control-room/red-pitaya/waveforms/CH1",
                                 },
@@ -54,7 +54,7 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                                     "@description": "CC Pressure Kistler Sensor",
                                     "@amplifier": "Kistler Type 5015",
                                     "@wire_number": "501",
-                                    "@pressure_range": args.kistler_ct_range,  # Bar
+                                    # "@pressure_range": args.kistler_ct_range,  # Bar
                                     # "@pressure_range": 10,  # Bar
                                     "@data_key_0": "raw-data/experimental-hall/rohde-schwarz/waveforms/C1",
                                     "@data_key_1": "raw-data/experimental-hall/tektronix/waveforms/CH1",
@@ -120,25 +120,11 @@ if __name__ == "__main__":
         "-d", "--shot_date", type=str, help="Shot date", default="2024-12-26_18-01-03"
     )
     parser.add_argument(
-        "-k",
-        "--kistler_cc_range",
-        type=float,
-        help="Kistler CC Range (Bar)",
-        default="200.0",
-    )
-    parser.add_argument(
         "-t",
         "--kistler_ct_range",
         type=float,
         help="Kistler CT Range (Bar)",
         default="10.0",
-    )
-    parser.add_argument(
-        "-f",
-        "--fill_pressure",
-        type=float,
-        help="CC Fill Pressure (Bar)",
-        default="40.0",
     )
     # Source - https://stackoverflow.com/a/16016463
 

@@ -4,7 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import sys
+
+import logging
+import psycopg2
 from pathlib import Path
+
+from db_config import DB_CONFIG
+
+log = logging.getLogger("plot_kistler")
 
 
 def get_attr(hdf, path: str = "/", key: str = "") -> any:
@@ -13,7 +20,49 @@ def get_attr(hdf, path: str = "/", key: str = "") -> any:
     return obj.attrs[key]
 
 
-def plot_kistler(hdf):
+def plot_kistler(hdf, reportId: int = 316):
+    try:
+        with psycopg2.connect(**DB_CONFIG) as conn:
+            with conn.cursor() as cur:
+                query = "SELECT float_val from sample WHERE short_name='ambientPressure' AND reports_id=(%s)"
+                cur.execute(
+                    query,
+                    (reportId,),
+                )
+                ambientPressure = cur.fetchone()[0]
+                print(f"ambientPressure: {ambientPressure}")
+                query = (
+                    "SELECT float_val from sample WHERE short_name='PT901' "
+                    "AND pulse_phase='CC_Step8_End' AND reports_id=(%s)"
+                )
+                cur.execute(
+                    query,
+                    (reportId,),
+                )
+                ccFillPressure = cur.fetchone()[0]
+                query = (
+                    "SELECT float_val from sample WHERE short_name='CC_Range_Kistler' "
+                    "AND pulse_phase='CC_Pulse' AND reports_id=(%s)"
+                )
+                cur.execute(
+                    query,
+                    (reportId,),
+                )
+                ccRangeKistler = cur.fetchone()[0]
+                print(f"ccRangeKistler: {ccRangeKistler}")
+                query = (
+                    "SELECT float_val from sample WHERE short_name='CC_DeltaP_Kistler' "
+                    "AND pulse_phase='CC_Pulse' AND reports_id=(%s)"
+                )
+                cur.execute(
+                    query,
+                    (reportId,),
+                )
+                ccDeltaPKistler = cur.fetchone()[0]
+                print(f"ccDeltaPKistler: {ccDeltaPKistler}")
+
+    except psycopg2.Error as exc:
+        log.error("Database error: %s", exc)
     fig = plt.figure()
     gs = fig.add_gridspec(2, hspace=0.1)
     axs = gs.subplots(sharex=True)
@@ -21,16 +70,16 @@ def plot_kistler(hdf):
     try:
         exp = hdf["experiment"]
         attrs = dict(exp.attrs)  # h5.get_attrs("diagnostics/experimental-hall/cc")
-        key = "cc_fill_pressure"
-        fill_pressure = attrs[key]
+        # key = "cc_fill_pressure"
+        # fill_pressure = attrs[key]
         date = attrs["date"]
 
-        print(f"fill_pressure: {fill_pressure} Bar, date {date}")
+        # print(f"fill_pressure: {fill_pressure} Bar, date {date}")
         diag = hdf["diagnostics/experimental-hall/cc/kistler"]
         attrs = dict(diag.attrs)  # h5.get_attrs("diagnostics/experimental-hall/cc")
-        key = "pressure_range"
-        kistler_range = attrs[key]
-        kistler_scale = kistler_range / 10.0  # Bar per Volt
+        # key = "pressure_range"
+        # kistler_range = attrs[key]
+        kistler_scale = ccRangeKistler / 10.0  # Bar per Volt
         print(f"Attributes: {attrs}")
         key = "raw-data/control-room/rohde-schwarz/waveforms/TIME"
         rtime = hdf[key][:]
@@ -44,7 +93,7 @@ def plot_kistler(hdf):
         axs[0].set_title("Rohde-Schwarz Oscilloscope", fontsize="small", loc="right")
         axs[0].plot(
             rtime,
-            rdata * kistler_scale + fill_pressure,
+            rdata * kistler_scale + ccFillPressure,
             color="blue",
         )  # alpha=0.5)
         axs[0].set_ylabel("Pressure / Bar")
@@ -89,8 +138,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Script to plot dataset Shot data stored in HDF5 files"
     )
-    parser.add_argument("-a", "--afs", action="store_true", help="Read from AFS")
-    # parser.add_argument("-e", "--explore", action="store_true", help="Explore hdf5")
+    parser.add_argument(
+        "-t", "--tree", action="store_true", help="Read hdf5 from SSHFS tree"
+    )
+    parser.add_argument("-r", "--reportId", type=int, default=316, help="reportID ")
 
     parser.add_argument(
         "-f",
@@ -107,7 +158,12 @@ def main():
         default=1.0e27,
     )
     args = parser.parse_args()
-    path_h5 = Path(args.file_h5)
+
+    if args.tree:
+        p = Path("./hdf-files")
+        path_h5 = p / str(args.reportId) / "data_with_metadata.h5"
+    else:
+        path_h5 = Path(args.file_h5)
     if not path_h5.exists():
         print(f"Error: File '{args.file_h5}' not found.", file=sys.stderr)
         sys.exit(1)
@@ -122,7 +178,7 @@ def main():
     with h5py.File(path_h5, "r") as h5:
         # temp_data = h5["raw-data/control-room/rohde-schwarz/waveforms/C1"][:]
         print(f"Type of h5: {type(h5)}")
-        plot_kistler(h5)
+        plot_kistler(h5, args.reportId)
 
 
 if __name__ == "__main__":

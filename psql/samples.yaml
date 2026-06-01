@@ -1,0 +1,13 @@
+- short_name: ambientPressure
+# Not present in Epics
+  epics_pv: Esther:ambient:Pressure
+  phase: CC_Start
+- short_name: PT901
+  epics_pv: Esther:gas:PT901-End-He2
+  phase: CC_Step8_End
+- short_name: CC_Range_Kistler
+  epics_pv: Esther:gas:CC_Range_Kistler
+  phase: CC_Pulse
+- short_name: CC_DeltaP_Kistler
+  epics_pv: Esther:gas:CC_DeltaP_Kistler
+  phase: CC_Pulse
