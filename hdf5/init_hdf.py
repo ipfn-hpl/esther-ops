@@ -21,7 +21,7 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                         "@title": "Esther ST Experiment Data",
                         "@institution": "IPFN-HPL Lab",
                         "@created_date": str(datetime.now()),
-                        "@version": "1.001",
+                        "@version": "1.0.1",
                         "@author": "bernardo.carvalho@tecnico.ulisboa.pt",
                     },
                     "experiment": {
@@ -77,8 +77,35 @@ def init_hdf(args, filename: str = H5FILE_PATH):
                             "@description": "Instruments in HPL experimental hall",
                         },
                     },
-                    "cal-data": {},
-                }
+                    "processed-data": {
+                        "@description": "Processed Data",
+                        "experimental-hall": {
+                            "cc": {
+                                "@description": "Combustion Chamber",
+                                "kistler": {
+                                    "@description": "CC Pressure Kistler Sensor",
+                                    "rohde-schwarz": {
+                                        "@description": "Control Room Rohde-Schwarz Measure",
+                                        "@data_key": "raw-data/experimental-hall/tektronix/waveforms/CH1",
+                                        "time": {
+                                            "@time_offset": 0.0,  # Relative o rohde-schwarz oscilloscope
+                                        },
+                                    },
+                                    "red-pitaya": {
+                                        "@description": "Pitaya Measure",
+                                        "@data_key": "raw-data/experimental-hall/tektronix/waveforms/CH1",
+                                        "time": {
+                                            "@sample_rate_key": "raw-data/control-room/red-pitaya/metadata/sample_rate",
+                                            "@decimation_key": "raw-data/control-room/red-pitaya/metadata/decimation",
+                                            "@time_offset": 0.0,  # Relative o rohde-schwarz oscilloscope
+                                            "@expression": "time = np.arange(data.shape[0]) / sample_rate * decimation + time_offset",
+                                        },
+                                    },
+                                },
+                            },
+                    },
+                },
+            }
             )
             print("HDF5 File Content:")
             for item in h5.list_contents():

@@ -24,7 +24,21 @@ def plot_kistler(hdf, reportId: int = 316):
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
             with conn.cursor() as cur:
+                query = "SELECT * FROM get_cc_shot_params((%s))"
+                cur.execute(
+                    query,
+                    (reportId,),
+                )
+                result = cur.fetchone()
+                print(f"result {result}")
+                ambientPressure = result[0]
+                ccFillPressure = result[1]
+                ccRangeKistler = result[2]
+                ccDeltaPKistler = result[3]
+                print(f"ambientPressure: {ambientPressure}")
+                """
                 query = "SELECT float_val from sample WHERE short_name='ambientPressure' AND reports_id=(%s)"
+
                 cur.execute(
                     query,
                     (reportId,),
@@ -59,6 +73,7 @@ def plot_kistler(hdf, reportId: int = 316):
                     (reportId,),
                 )
                 ccDeltaPKistler = cur.fetchone()[0]
+                """
                 print(f"ccDeltaPKistler: {ccDeltaPKistler}")
 
     except psycopg2.Error as exc:

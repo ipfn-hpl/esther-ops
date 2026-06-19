@@ -32,7 +32,7 @@ def import_pitaya2hdf(args):
                 "@ecosystem": "1.04-93661995d",
                 "@has_time": False,
                 "@sample_rate": 125.0e6,  # Hz
-                "@time_offset": 0.0,  # To rohde-schwarz oscilloscope
+                #"@time_offset": 0.0,  # To rohde-schwarz oscilloscope
                 "@decimation": 16,
                 "@channels": 1,
                 "@unit": "lsb",
