@@ -15,7 +15,8 @@ RETURNS TABLE (
     he_fraction       REAL,
     h2_fraction       REAL,
     o2_fraction       REAL,
-    press_purge_end REAL,
+     press_purge_end   REAL,
+     --press_purge_end2   REAL,
     he_h2_ratio       REAL
 )
 LANGUAGE plpgsql
@@ -33,21 +34,22 @@ BEGIN
         r.h2_sp,
         r.o2_sp,
         r.n2_flushing,
-        -- calculations
-        -- Get the :WHEREfloat_val for a specific channel + phase combo
-        MAX(s.float_val) FILTER (
-             WHERE s.short_name = 'PT901' AND s.pulse_phase = 'CC_purge_end'
-        ) AS press_purge_end,
-        --(r.he_sp + r.h2_sp + r.o2_sp)::real                       AS press_purge_end,
+        -- calculations, in the SAME order as RETURNS TABLE
         (r.he_sp + r.h2_sp + r.o2_sp)::real                       AS total_gas_sp,
         (r.he_sp / NULLIF(r.he_sp + r.h2_sp + r.o2_sp, 0))::real  AS he_fraction,
         (r.h2_sp / NULLIF(r.he_sp + r.h2_sp + r.o2_sp, 0))::real  AS h2_fraction,
         (r.o2_sp / NULLIF(r.he_sp + r.h2_sp + r.o2_sp, 0))::real  AS o2_fraction,
-        (r.he_sp / NULLIF(r.h2_sp, 0))::real                      AS he_h2_ratio
+        CASE WHEN r.n2_flushing THEN NULL
+        ELSE MAX(s.float_val) FILTER ( WHERE TRIM(s.short_name)  = 'PT901'
+              AND TRIM(s.pulse_phase) = 'CC_purge_end' )::real END AS press_purge_end,
+        CASE WHEN r.n2_flushing THEN NULL
+        ELSE MAX(s.float_val) FILTER ( WHERE TRIM(s.short_name)  = 'PT901'
+              AND TRIM(s.pulse_phase) = 'CC_o2_end' )::real END AS press_o2_end,
+        (r.o2_sp / NULLIF(r.he_sp + r.h2_sp + r.o2_sp, 0))::real  AS o2_fraction,
+        (r.he_sp / NULLIF(r.h2_sp, 0))::real   AS he_h2_ratio
     FROM reports r
-    JOIN sample s ON s.reports_id = r.id
-    WHERE (r.id = p_report_id);
-    -- WHERE (p_series_name IS NULL OR r.series_name = p_series_name)
-    --   AND (p_shot        IS NULL OR r.shot        = p_shot);
+    LEFT JOIN sample s ON s.reports_id = r.id
+    WHERE r.id = p_report_id
+    GROUP BY r.id;
 END;
 $$;
