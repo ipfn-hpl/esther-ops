@@ -14,14 +14,14 @@ BEGIN
         (
             SELECT float_val 
             FROM sample 
-            WHERE short_name='ambientPressure' AND reports_id = p_report_id
+            WHERE short_name='ambient_pressure' AND reports_id = p_report_id
         ) AS ambient_pressure,
 
         -- Query 2
         (
             SELECT float_val 
             FROM sample 
-            WHERE short_name='PT901' AND pulse_phase='CC_Step8_End' 
+            WHERE short_name='PT901' AND pulse_phase='CC_he2_end' 
             AND reports_id = p_report_id
         ) AS fill_pressure,
 
@@ -29,7 +29,7 @@ BEGIN
         (
             SELECT float_val 
             FROM sample 
-            WHERE short_name='CC_Range_Kistler' AND pulse_phase='CC_Pulse' 
+            WHERE short_name='CC_range_kistler' AND pulse_phase='CC_pulse' 
             AND reports_id = p_report_id
         ) AS kistler_range,
 
@@ -37,7 +37,7 @@ BEGIN
         (
             SELECT float_val 
             FROM sample 
-            WHERE short_name='CC_DeltaP_Kistler' AND pulse_phase='CC_Pulse' 
+            WHERE short_name='CC_deltaP_kistler' AND pulse_phase='CC_pulse' 
             AND reports_id = p_report_id
         ) AS kistler_deltaP;
 
