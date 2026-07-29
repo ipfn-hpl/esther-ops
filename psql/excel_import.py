@@ -28,7 +28,7 @@ INSERT_SAMPLE = (
     "VALUES (%s, %s, %s, %s, %s)"
 )
 
-selected_indexes = [1, ]
+selected_indexes = [10, ]
 selected_df = df.loc[selected_indexes].copy()
 
 #for index, row in df.iterrows():
@@ -75,17 +75,39 @@ def insert_reports(df:  pd.DataFrame):
                 with conn.cursor() as cur:
                     shot_number= row["shot_number"]
                     researcher_id = row["manager_id"]
-                    cc_pressure_sp  = row["pt901_target"]
+                    # cc_pressure_sp  = row["pt901_target"]  ## not always used
+                    cc_pressure_sp  = row["filling_pressure_sp"] - 1.0
+                    He_ratio_sp  = row["He_ratio_sp"]
+                    H2_ratio_sp  = row["H2_ratio_sp"]
+                    O2_ratio_sp  = row["O2_ratio_sp"]
+                    
                     ambient_temperature = row["ambient_temperature"]
                     ambient_pressure = row["ambient_pressure"]
                     ambient_humidity = row["ambient_humidity"]
                     datetime_pd= row["datetime"]
+                    #'float' object has no attribute 'astype'
                     n2_bottle_initial = row["N2_bottle_initial"]
                     o2_bottle_initial = row["O2_bottle_initial"]
                     h2_bottle_initial = row["H_bottle_initial"]
                     he1_bottle_initial = row["He1_bottle_initial"]
                     he2_bottle_initial = row["He2_bottle_initial"]
                     n2_command_bottle_initial= row["N2_command_bottle_initial"]
+                    n2_bottle_final = row["N2_bottle_final"]
+                    o2_bottle_final = row["O2_bottle_final"]
+                    h2_bottle_final = row["H_bottle_final"]
+                    he1_bottle_final = row["He1_bottle_final"]
+                    he2_bottle_final = row["He2_bottle_final"]
+                    n2_command_bottle_final= row["N2_command_bottle_initial"]
+
+                    #pt901_target = row['pt901_target']
+                    pt901_end_s1 = row["pt901_end_s1"]
+                    pt901_end_o = row["pt901_end_o"]
+                    pt901_end_he1 = row["pt901_end_he1"]
+                    pt901_end_h = row["pt901_end_h"]
+                    pt901_end_he2 = row["pt901_end_he2"]
+                    cc_range_kistler = row["range_kistler"]
+                    delta_P_kistler = row["delta_P_kistler"]
+
                     #print(f"datetime_pd: {datetime_pd}")
 
                     if researcher_id == 2: 
@@ -102,7 +124,7 @@ def insert_reports(df:  pd.DataFrame):
                     # Convert to Python datetime and then to UTC
                     #
 
-                    vals = [shot_number, 'B', shot_number, chief_engineer_id, researcher_id, cc_pressure_sp, 2.0, 1.2, 1.2]
+                    vals = [shot_number, 'B', shot_number, chief_engineer_id, researcher_id, cc_pressure_sp, He_ratio_sp, H2_ratio_sp, O2_ratio_sp]
                     cur.execute(INSERT_REPORT, vals)
                     log.debug(
                         "Inserted row %d (rowcount=%d)", index, cur.rowcount
@@ -110,11 +132,31 @@ def insert_reports(df:  pd.DataFrame):
                     print(cur.query)  # This will show the full SQL query with parameters
                     print(f"shot_number: {shot_number}, researcher_id: {researcher_id}, ambient_t {ambient_temperature}")
                     print(f"reports: {vals}")
-                    insert_sample(cur, utc_datetime, 'ambientTemperature', 'CC_Start', shot_number, ambient_temperature)
-                    insert_sample(cur, utc_datetime, 'ambientPressure', 'CC_Start', shot_number, ambient_pressure)
-                    insert_sample(cur, utc_datetime, 'ambientHumidity', 'CC_Start', shot_number, ambient_humidity)
-                    insert_sample(cur, utc_datetime, 'PT101', 'CC_Start', shot_number, n2_bottle_initial)
-                    insert_sample(cur, utc_datetime, 'PT201', 'CC_Start', shot_number, o2_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'ambient_temperature', 'CC_start', shot_number, ambient_temperature)
+                    insert_sample(cur, utc_datetime, 'ambient_pressure', 'CC_start', shot_number, ambient_pressure)
+                    insert_sample(cur, utc_datetime, 'ambient_humidity', 'CC_start', shot_number, ambient_humidity)
+                    insert_sample(cur, utc_datetime, 'PT101', 'CC_start', shot_number, n2_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'PT201', 'CC_start', shot_number, o2_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'PT301', 'CC_start', shot_number, he1_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'PT401', 'CC_start', shot_number, h2_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'PT501', 'CC_start', shot_number, he2_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'PT801', 'CC_start', shot_number, n2_command_bottle_initial)
+                    insert_sample(cur, utc_datetime, 'PT101', 'CC_end', shot_number, n2_bottle_final)
+                    insert_sample(cur, utc_datetime, 'PT201', 'CC_end', shot_number, o2_bottle_final)
+                    insert_sample(cur, utc_datetime, 'PT301', 'CC_end', shot_number, he1_bottle_final)
+                    insert_sample(cur, utc_datetime, 'PT401', 'CC_end', shot_number, o2_bottle_final)
+                    insert_sample(cur, utc_datetime, 'PT501', 'CC_end', shot_number, he2_bottle_final)
+                    insert_sample(cur, utc_datetime, 'PT801', 'CC_end', shot_number, n2_command_bottle_final)
+
+                    insert_sample(cur, utc_datetime, 'PT901', 'CC_purge_end', shot_number, pt901_end_s1)
+                    insert_sample(cur, utc_datetime, 'PT901', 'CC_o2_end', shot_number, pt901_end_o)
+                    insert_sample(cur, utc_datetime, 'PT901', 'CC_he1_end', shot_number, pt901_end_he1)
+                    insert_sample(cur, utc_datetime, 'PT901', 'CC_h2_end', shot_number, pt901_end_h)
+                    insert_sample(cur, utc_datetime, 'PT901', 'CC_he2_end', shot_number, pt901_end_he2)
+
+                    insert_sample(cur, utc_datetime, 'cc_range_kistler', 'CC_pulse', shot_number, cc_range_kistler)
+                    insert_sample(cur, utc_datetime, 'cc_deltaP_kistler', 'CC_pulse', shot_number, delta_P_kistler)
+                    #insert_sample(cur, utc_datetime, 'PT901', 'CC_he1_end', shot_number, pt901_end_)
                     # Print the full query
     except psycopg2.Error as exc:
         log.error("Database error: %s", exc)
