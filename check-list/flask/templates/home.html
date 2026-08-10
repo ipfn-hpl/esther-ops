@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Checklist App </title>
+    <style>
+    body { font-family: Arial; margin: 50px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+    background-color: #008CBA; color: white; border-radius: 3px; }
+                .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther Checklist Management. </h1>
+    <p>Welcome to ESTHER! Please <a href="{{ url_for('login') }}">Login</a></p>
+    <p>Show last Shot <a href="{{ url_for('report') }}">Report</a></p>
+    <p>(to get report for other shot Id, add "/report_id Number" to the end of the <a href="{{ url_for('report') }}">Link</a>)</p>
+  </body>
+</html>
+

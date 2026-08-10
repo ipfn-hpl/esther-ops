@@ -4,3 +4,4 @@ werkzeug
 psycopg2-binary
 # mariadb
 
+sudo apt install python3-werkzeug python3-psycopg2 python3-flask python3-flask-login

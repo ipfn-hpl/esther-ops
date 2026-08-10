@@ -80,30 +80,9 @@ def home():
     # return 'Welcome to ESTHER! Please <a href="/login">Login</a>'
     # return 'Welcome! <a href="/login">Login</a> | <a href="/register">Register</a>'
 
-    return """
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Flask ESTHER Checklist App - MariaDB</title>
-    <style>
-    body { font-family: Arial; margin: 50px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #4CAF50; color: white; }
-    .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
-    background-color: #008CBA; color: white; border-radius: 3px; }
-                .btn:hover { background-color: #005f7a; }
-    </style>
-  </head>
-  <body>
-    <h1> Esther Checklist Management. </h1>
-    <p>Welcome to ESTHER! Please <a href="/login">Login</a></p>
-    <p>Show last Shot <a href="/report">Report</a></p>
-    <p>(to get report for other shot Id, add "/report_id Number" to the end of the <a href="/report">Link</a>)</p>
-  </body>
-</html>
-    """
-
+    return render_template(
+        "home.html",
+    )
 
 @app.route("/report")
 @app.route("/report/<int:report_id>")
