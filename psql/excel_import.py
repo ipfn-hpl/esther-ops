@@ -9,13 +9,11 @@ log = logging.getLogger("excel")
 
 EXCEL_FILE = "BXXX_data.xlsx"
 #SHEET_NAME = 0  # first sheet
-SHEET_NAME = 1  # second sheet +esther_reports'
+SHEET_NAME = 1  # second sheet: 'esther_reports'
 
-
-df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_NAME)
+sheet_df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_NAME)
 
 print("\nExcel rows found:\n")
-
 
 INSERT_REPORT = (
     "INSERT INTO reports "
@@ -27,15 +25,18 @@ INSERT_SAMPLE = (
     "(time_date, short_name, pulse_phase, reports_id, float_val) "
     "VALUES (%s, %s, %s, %s, %s)"
 )
-
-selected_indexes = [10, ]
-selected_df = df.loc[selected_indexes].copy()
+#selected_indexes = [1, 2, ]
+selected_indexes = range(25, 100)
+#selected_indexes = [1, 2, ]
+# "selected_indexes = [11, 12, 13,14,15,16,17,18, ]
+#selected_indexes = [20,21, 22, 23, 24, 25, 26,27,28,29, ]
+df = sheet_df.loc[selected_indexes].copy()
 
 #for index, row in df.iterrows():
 #    excel_row_number = index + 2
 #    print(f"Excel row {excel_row_number}: {row.to_dict()}")
 
-for index, row in selected_df.iterrows():
+for index, row in df.iterrows():
     excel_row_number = index + 2
     print(f"Excel row {excel_row_number}: {row.to_dict()}")
 
@@ -52,7 +53,7 @@ def insert_sample(curs, utc_datetime, key: str, phase: str, shot_number: int, fv
     print(curs.query)  # This will show the full SQL query with parameters
 
 def insert_reports(df:  pd.DataFrame):
-    df["shot_number"] = selected_df["shot_number"].astype("Int32")
+    df["shot_number"] = df["shot_number"].astype("Int32")
     df["manager_id"] = df["manager_id"].astype("Int32")
     df["ambient_temperature"] = df["ambient_temperature"].astype(float)
     df["pt901_target"] = df["pt901_target"].astype(float)
@@ -64,11 +65,11 @@ def insert_reports(df:  pd.DataFrame):
     )
 # Extract date and time
     df["date_only"] = df["datetime"].dt.date
-    df["time_only"] = selected_df["datetime"].dt.time
+    df["time_only"] = df["datetime"].dt.time
 #date_only = start_time.dt.date
 #time_only = start_time.dt.time_only
 # print(shot_number)
-    print(selected_df[["datetime", "date_only", "time_only"]])
+    print(df[["datetime", "date_only", "time_only"]])
     try:
         with psycopg2.connect(**DB_CONFIG) as conn:
             for index, row in df.iterrows():
@@ -172,8 +173,8 @@ def insert_reports(df:  pd.DataFrame):
 # selected_df["pt901_target"] = selected_df["pt901_target"].astype(float)
 # selected_df["He_ratio_sp"] = selected_df["He_ratio_sp"].astype(float)
 #
-selected_df["datetime"] = pd.to_datetime(
-    selected_df["start_time"],
+df["datetime"] = pd.to_datetime(
+    df["start_time"],
     errors="coerce"
 )
 # # Extract date and time
@@ -206,7 +207,7 @@ selected_df["datetime"] = pd.to_datetime(
 #                 print(vals)
 # except psycopg2.Error as exc:
 #     log.error("Database error: %s", exc)
-insert_reports(selected_df)
+insert_reports(df)
 
 
 #print(f"date_only: {date_only}i, time_only: {time_only}")
