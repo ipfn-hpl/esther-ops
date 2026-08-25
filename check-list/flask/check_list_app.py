@@ -15,6 +15,7 @@ from werkzeug.security import check_password_hash  # generate_password_hash,
 from functools import wraps
 from datetime import timedelta
 
+import math
 import psycopg2
 import psycopg2.extras
 import sys
@@ -70,6 +71,33 @@ def close_db(error):
 
 
 # Home route
+HOME_PAGE_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask ESTHER Checklist App </title>
+    <style>
+    body { font-family: Arial; margin: 50px; }
+    h1 { font-size: 1.3rem; }
+    h2 { font-size: 1.1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    .btn { padding: 5px 10px; margin: 2px; text-decoration: none; 
+    background-color: #008CBA; color: white; border-radius: 3px; }
+                .btn:hover { background-color: #005f7a; }
+    </style>
+  </head>
+  <body>
+    <h1> Esther Checklist Management. </h1>
+    <p>Welcome to ESTHER! Please <a href="{{ url_for('login') }}">Login</a></p>
+    <h2> OR:  </h2>
+    <p>Show last Shot <a href="{{ url_for('report') }}">Report</a></p>
+    <p>(to get report for other shot Id, add "/report_id Number" to the end of the <a href="{{ url_for('report') }}">Link</a>)</p>
+  </body>
+</html>
+"""
+
 @app.route("/")
 def home():
     if "user_id" in session:
@@ -80,9 +108,12 @@ def home():
     # return 'Welcome to ESTHER! Please <a href="/login">Login</a>'
     # return 'Welcome! <a href="/login">Login</a> | <a href="/register">Register</a>'
 
-    return render_template(
-        "home.html",
-    )
+    #return render_template(
+    #    "home.html",
+    #)
+    return render_template_string(
+            HOME_PAGE_TEMPLATE,
+        )
 
 @app.route("/report")
 @app.route("/report/<int:report_id>")
@@ -267,6 +298,112 @@ def dashboard(report_id=None):
         reportId = report_id
     return render_template("dashboard.html", reportId=reportId, roles=session["roles"])
 
+# get_report_with_calculations() takes a single rec_number. To cover a
+# range, generate_series(from, to) is joined with LATERAL so the
+# function is called once per rec_number in the range and the results
+# are combined into one result set. from/to are always bind parameters
+# (%s) — never string-formatted — to avoid SQL injection.
+SHOT_LIST_QUERY = (
+    "SELECT report.id, "
+    "report.series, report.shot, report.cc_pressure_sp, report.he_sp, report.h2_sp, report.o2_sp, "
+    "report.n2_flushing, report.press_purge_end, "
+    "report.he_fraction, report.h2_fraction, report.o2_fraction, "
+    "report.o2_stoich, report.h2_stoich, report.he_stoich "
+    "FROM generate_series(%s, %s) AS gs(rec_number) "
+    "CROSS JOIN LATERAL get_report_with_calculations(gs.rec_number) AS report"
+)
+PAGE_SIZE = 25
+# id  |  series  | shot | cc_pressure_sp | he_sp | h2_sp | o2_sp | n2_flushing |
+#    press_purge_end | o2_fraction | h2_fraction | he_fraction | o2_stoich | h2_stoich | he_stoich
+def fetch_data(
+    rec_from, rec_to, sort_col=None, sort_dir="asc", page=1, page_size=PAGE_SIZE):
+    """
+    Calls get_report_with_calculations() once per rec_number in
+    [rec_from, rec_to] via a LATERAL join, optionally sorted and
+    paginated.
+
+    - rec_from / rec_to are always passed as bind parameters.
+    - sort_col is validated against the query's own result columns
+      (whitelist) before being interpolated into ORDER BY, since column
+      names can't be bind-parameterized in SQL.
+    - Pagination uses LIMIT/OFFSET plus a COUNT(*) OVER() window
+      function to get the total row count in the same query.
+    """
+    #with get_connection() as conn:
+    with get_db() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Discover real column names first (cheap: LIMIT 0).
+            cur.execute(
+                f"SELECT * FROM ({SHOT_LIST_QUERY}) AS sub LIMIT 0", (rec_from, rec_to)
+            )
+            columns = [desc[0] for desc in cur.description]
+
+            order_clause = ""
+            if sort_col and sort_col in columns:
+                direction = "ASC" if sort_dir == "asc" else "DESC"
+                # Safe: sort_col checked against whitelist above.
+                order_clause = f' ORDER BY "{sort_col}" {direction}'
+
+            offset = (page - 1) * page_size
+            paged_query = (
+                f"SELECT *, COUNT(*) OVER() AS __total_count "
+                f"FROM ({SHOT_LIST_QUERY}) AS sub"
+                f"{order_clause} LIMIT %s OFFSET %s"
+            )
+            cur.execute(paged_query, (rec_from, rec_to, page_size, offset))
+            rows = cur.fetchall()
+
+    total_count = rows[0]["__total_count"] if rows else 0
+    for row in rows:
+        row.pop("__total_count", None)
+
+    total_pages = max(1, math.ceil(total_count / page_size))
+    return columns, rows, total_count, total_pages
+
+SHOT_QUERY = "SELECT * FROM get_report_with_calculations(%s)"
+@app.route("/shot_data")
+@app.route("/shot_data/<int:report_id>")
+def shot_data(
+    report_id=10,
+):
+    # fetch_data(1, 20)
+    try:
+        with get_db() as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(
+                    f"SELECT * FROM get_report_with_calculations(%s)", (report_id,),
+                )
+                columns = [desc[0] for desc in cur.description]
+                #print(columns)
+                row = cur.fetchone()
+                cur.execute(
+                    f"SELECT n2,o2,he1,h2,he2,n2_command  FROM get_bottles_data(%s,%s)", (report_id,'CC_start'),
+                )
+                bottle_columns = [desc[0] for desc in cur.description]
+                # print(bottle_columns)
+                bottle_initial = cur.fetchone()
+                print(bottle_initial)
+                cur.execute(
+                    f"SELECT n2,o2,he1,h2,he2,n2_command  FROM get_bottles_data(%s,%s)", (report_id,'CC_end'),
+                )
+                bottle_final = cur.fetchone()
+                print(bottle_final)
+#        columns, rows, total_count, total_pages = fetch_data(2,2)
+ #            rec_from, rec_to, sort_col, sort_dir, page=page
+        # )
+    except psycopg2.Error as e:
+        return f"<pre>Database error: {e}</pre>", 500
+    #return render_template_string(
+    #    PAGE_TEMPLATE,
+    page = 1
+    return render_template(
+        "shot_data.html",
+        columns=columns,
+        row=row,
+        bottle_columns=bottle_columns,
+        bottle_initial=bottle_initial,
+        bottle_final=bottle_final,
+    )
 
 @app.route("/report_list")
 @app.route("/report_list/<int:limit>")

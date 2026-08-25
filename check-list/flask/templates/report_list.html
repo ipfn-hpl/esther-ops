@@ -16,16 +16,18 @@
   <body>
     <h1> Esther Last Reports </h1>
     {% if lenList > 0 %}
+    
     <table>
       <tr>
         <th>ID</th>
         <th>Series</th>
         <th>Shot</th>
-        <th>First Time/Date </th>
+        <th>First Time </th>
         <th>chief_engineer_id</th>
         <th>researcher_id.</th>
         <th>cc_pressure_sp</th>
-        <th>Show report</th>
+        <th>Checklist</th>
+        <th>Shot Data</th>
       </tr>
       {% for i in range(0, lenList) %}
       <tr>
@@ -36,7 +38,8 @@
         <td>{{ report_list[i][3] }}</td>
         <td>{{ report_list[i][4] }}</td>
         <td>{{ report_list[i][5] }}</td>
-        <td><a href={{ url_for('report', report_id=report_list[i][0]) }}>Show Report full List</a></td>
+        <td><a href={{ url_for('report', report_id=report_list[i][0]) }}>Full Checklist</a></td>
+        <td><a href={{ url_for('shot_data', report_id=report_list[i][0]) }}>Detail</a></td>
       </tr>
       {% endfor %}
     </table>
