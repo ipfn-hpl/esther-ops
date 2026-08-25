@@ -13,6 +13,9 @@ RETURNS TABLE (
     o2_sp             REAL,
     n2_flushing       BOOLEAN,
     press_purge_end   REAL,
+    press_fill_abs    REAL,
+    post_shot_dp    REAL,
+    post_shot_max_p    REAL,
     -- calculated columns
     -- total_gas_sp      REAL,
     o2_fraction       REAL,
@@ -33,6 +36,8 @@ DECLARE
     v_end_h2 REAL;
     v_end_he2 REAL;
     v_end_abs REAL;
+    v_deltaP REAL;
+    v_maxP REAL;
     v_partial_o2 REAL;
     v_partial_he1 REAL;
     v_partial_h2 REAL;
@@ -87,6 +92,13 @@ BEGIN
       AND TRIM(s.short_name)  = 'PT901'
       AND TRIM(s.pulse_phase) = 'CC_he2_end';
 
+    SELECT MAX(s.float_val)::real
+    INTO v_deltaP
+    FROM sample s
+    WHERE s.reports_id = p_report_id
+      AND s.short_name  = 'cc_deltaP_kistler'
+      AND s.pulse_phase = 'CC_pulse';
+
     -- 3. Calculations between locals
     -- IF v_purge_ratio IS NULL OR v_partial_o2 IS NULL THEN
         -- (
@@ -94,47 +106,49 @@ BEGIN
     v_partial_he1 := NULL;
     v_partial_h2 := NULL;
     v_partial_he2 := NULL;
+    v_end_abs := NULL;
     v_stoich_o2 := NULL;
     v_stoich_h2 := NULL;
     v_stoich_he := NULL;
-    IF v_purge_end IS NULL THEN
-      v_partial_o2 := NULL;
-    ELSE
-      IF v_ambient_pressure IS NULL THEN
-        v_end_abs := 1.0 + v_purge_end  + v_end_he2; 
-      ELSE
-        v_end_abs := v_ambient_pressure/1000.0 + v_purge_end + v_end_he2;
-      END IF;
-      -- IF v_end_he2 IS NULL THEN
-      -- ELSE
+    IF v_purge_end IS NOT NULL THEN
       IF v_end_he2 IS NOT NULL THEN
-        -- IF v_end_o2 IS NULL THEN
-        --   v_partial_o2 := NULL;
-        --   v_partial_he1 := NULL;
+        IF v_ambient_pressure IS NULL THEN
+          v_end_abs := 1.0 - v_purge_end  + v_end_he2; 
+        ELSE
+          v_end_abs := v_ambient_pressure/1000.0 - v_purge_end + v_end_he2;
+        END IF;
+        -- IF v_end_he2 IS NULL THEN
         -- ELSE
-        IF v_end_o2 IS NOT NULL THEN
-          v_partial_o2 := (v_end_o2 - v_purge_end);
-          v_o2_fraction := (v_partial_o2 / v_end_abs);
-          IF v_end_he1 IS NULL THEN
-            v_partial_he1 := NULL;
-          ELSE
-            v_partial_he1 := (v_end_he1 - v_end_o2);
-            --v_o2_fraction := (v_partial_o2 / v_end_he2);
-          END IF;
-          IF v_end_h2 IS NULL THEN
-            v_partial_h2 := NULL;
-          ELSE
-            v_partial_h2 := (v_end_h2 - v_end_he1);
-            v_h2_fraction := (v_partial_h2 / v_end_abs);
-            v_partial_he2 := (v_end_he2 - v_end_h2);
-            v_he_fraction := 1.0 - v_o2_fraction -v_h2_fraction;
-            v_stoich_o2 := 2.0/v_h2_fraction * v_o2_fraction;
-            v_stoich_h2 := 2.0;
-            v_stoich_he := 2.0/v_h2_fraction * v_he_fraction;
-       -- (( v_ambient_pressure/1000.0 + v_purge_end+ v_partial_he1 + v_partial_he2 ) / NULLIF(v_end_he2, 0))::real  AS he_fraction,
+        IF v_end_he2 IS NOT NULL THEN
+          -- IF v_end_o2 IS NULL THEN
+          --   v_partial_o2 := NULL;
+          --   v_partial_he1 := NULL;
+          -- ELSE
+          IF v_end_o2 IS NOT NULL THEN
+            v_partial_o2 := (v_end_o2 - v_purge_end);
+            v_o2_fraction := (v_partial_o2 / v_end_abs);
+            IF v_end_he1 IS NOT NULL THEN
+              v_partial_he1 := (v_end_he1 - v_end_o2);
+              --v_o2_fraction := (v_partial_o2 / v_end_he2);
+            END IF;
+            IF v_end_h2 IS NOT NULL THEN
+              v_partial_h2 := (v_end_h2 - v_end_he1);
+              v_h2_fraction := (v_partial_h2 / v_end_abs);
+              v_partial_he2 := (v_end_he2 - v_end_h2);
+              v_he_fraction := 1.0 - v_o2_fraction - v_h2_fraction;
+              v_stoich_o2 := 2.0 / v_h2_fraction * v_o2_fraction;
+              v_stoich_h2 := 2.0;
+              v_stoich_he := 2.0 / v_h2_fraction * v_he_fraction;
+        -- (( v_ambient_pressure/1000.0 + v_purge_end+ v_partial_he1 + v_partial_he2 ) / NULLIF(v_end_he2, 0))::real  AS he_fraction,
+            END IF;
           END IF;
         END IF;
       END IF;
+    END IF;
+    IF v_deltaP IS NOT NULL THEN
+      v_maxP := v_deltaP + v_end_abs;
+    ELSE
+      v_maxP := NULL;
     END IF;
     -- v_partial_o2  := (v_end_o2 - v_purge_end);
     -- v_partial_h2  := (v_end_h2 - v_end_he1);
@@ -165,7 +179,10 @@ BEGIN
         r.o2_sp,
         r.n2_flushing,
         -- calculations, in the SAME order as RETURNS TABLE
-        v_purge_end                                  AS press_purge_end,
+        v_purge_end              AS press_purge_end,
+        v_end_abs                AS press_fill_abs,    
+        v_deltaP                 AS post_shot_dp,    
+        v_maxP                 AS post_shot_max_p, 
         --(r.he_sp + r.h2_sp + r.o2_sp)::real                       AS total_gas_sp,
         -- (r.he_sp / NULLIF(r.he_sp + r.h2_sp + r.o2_sp, 0))::real  AS he_fraction,
         -- (r.h2_sp / NULLIF(r.he_sp + r.h2_sp + r.o2_sp, 0))::real  AS h2_fraction,
