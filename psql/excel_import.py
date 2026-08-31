@@ -26,7 +26,7 @@ INSERT_SAMPLE = (
     "VALUES (%s, %s, %s, %s, %s)"
 )
 # selected_indexes = [1, 2, ]
-selected_indexes = range(25, 100)
+selected_indexes = range(0, 176)
 # selected_indexes = [1, 2, ]
 # "selected_indexes = [11, 12, 13,14,15,16,17,18, ]
 # selected_indexes = [20,21, 22, 23, 24, 25, 26,27,28,29, ]
@@ -100,7 +100,7 @@ def insert_reports(df: pd.DataFrame):
                     h2_bottle_final = row["H_bottle_final"]
                     he1_bottle_final = row["He1_bottle_final"]
                     he2_bottle_final = row["He2_bottle_final"]
-                    n2_command_bottle_final = row["N2_command_bottle_initial"]
+                    n2_command_bottle_final = row["N2_command_bottle_final"]
 
                     # pt901_target = row['pt901_target']
                     pt901_end_s1 = row["pt901_end_s1"]
